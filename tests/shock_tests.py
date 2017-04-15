@@ -1,11 +1,18 @@
-from nose.tools import *
-import shock
+import unittest
+from unittest import TestCase
+from shock.core import Shock
 
-def setup():
-    print "SETUP!"
+class ShockTests(TestCase):
+    def setUp(self):
+        self.sck = Shock()
+        self.sck.start()
 
-def teardown():
-    print "TEAR DOWN!"
+    def tearDown(self):
+        self.sck.close()
 
-def test_basic():
-    print "I RAN!"
+    def test_rabbitmq_connection(self):
+        self.sck.join_queue('data_stream')
+        self.sck.publish('hello friends', 'data_stream')
+
+if __name__ == '__main__':
+        unittest.main()
