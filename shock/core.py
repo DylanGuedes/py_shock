@@ -1,5 +1,6 @@
 import pika
 import os
+from pyspark import SparkContext, SparkConf
 
 class Shock():
     """This class serves as an abstraction for the communication between Spark
@@ -19,6 +20,9 @@ class Shock():
         params = pika.ConnectionParameters(str(os.environ['RABBITMQ_HOST']))
         self.connection = pika.BlockingConnection(params)
         self.channel = self.connection.channel()
+        self.spk_conf = SparkConf().set("spark.python.profile", "true")
+        self.spk_sc = SparkContext(conf=self.spk_conf)
+        self.data = self.spk_sc.emptyRDD()
 
     def subscribe(self, topic, queue):
         """Subscribes for a specific topic.
@@ -27,6 +31,7 @@ class Shock():
         res = self.channel.queue_declare(queue=queue)
         self.channel.queue_bind(exchange=topic, queue=res.method.queue, routing_key='#')
         self.channel.basic_consume(self.receive, queue=res.method.queue, no_ack=True)
+        self.entities = set()
 
     def prepare_exchange(self, exch, typ):
         """Guarantees that given exchange exist
@@ -52,4 +57,20 @@ class Shock():
         subscribed topic
         """
         print(" [x] Received %r" % body)
+        self.add_entity(body['bus_id'])
+        process_item = self.spk_sc.parallelize(body)
+        self.append_item(process_item)
+        self.check_anomaly()
 
+    def add_entity(self, entity_id):
+        self.entities.add(entity_id)
+
+    def append_item(self, item):
+        """Append item rdd to `data` rdd
+        """
+        self.data = self.data.union(item)
+
+    def check_anomaly(self):
+        if (self.data.count() > 100):
+            for u in self.entities:
+                result = self.data.filter(lambda a: u==a['bus_id'])
