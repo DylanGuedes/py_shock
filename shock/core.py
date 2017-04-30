@@ -1,76 +1,32 @@
-import pika
-import os
 from pyspark import SparkContext, SparkConf
+from pyspark.streaming.kafka import KafkaUtils
+from pyspark.streaming import StreamingContext
 
 class Shock():
     """This class serves as an abstraction for the communication between Spark
-    and RabbitMQ
+    and Kafka
 
     Usage:
-        >>> sck = Shock()
-        >>> sck.start()
-        >>> sck.subscribe('resource_create')
-        >>> sck.digest()
-        >>> sck.close()
+        >>> shock = Shock(brokers="kafka:9092", KappaArchitecture)
+        >>> shock.register_action(2, myfunc1)
+        >>> shock.register_action(3, myfunc1)
+        >>> shock.register_action(4, myfunc1)
+        >>> shock.start()
     """
 
+    def __init__(self, brokers, architecture):
+        self.handler = architecture(brokers)
+
+    def register_action(self, fn, priority):
+        self.handler.register_action(fn, priority)
+
     def start(self):
-        """Starts RabbitMQ connection.
+        """Starts processing.
         """
-        params = pika.ConnectionParameters(str(os.environ['RABBITMQ_HOST']))
-        self.connection = pika.BlockingConnection(params)
-        self.channel = self.connection.channel()
-        self.spk_conf = SparkConf().set("spark.python.profile", "true")
-        self.spk_sc = SparkContext(conf=self.spk_conf)
-        self.data = self.spk_sc.emptyRDD()
+        self.handler.spk_conf = SparkConf().set("spark.python.profile", "true")
+        self.handler.spk_sc = SparkContext()
+        self.handler.spk_ssc = StreamingContext(self.handler.spk_sc, 2) # TODO: use os.environ
+        broker_conf = {"metadata.broker.list": self.handler.brokers}
+        self.handler.stream = KafkaUtils.createDirectStream(self.handler.spk_ssc, ["interscity"], broker_conf)
+        self.handler.start()
 
-    def subscribe(self, topic, queue):
-        """Subscribes for a specific topic.
-        """
-        self.channel.exchange_declare(exchange=topic, type='topic')
-        res = self.channel.queue_declare(queue=queue)
-        self.channel.queue_bind(exchange=topic, queue=res.method.queue, routing_key='#')
-        self.channel.basic_consume(self.receive, queue=res.method.queue, no_ack=True)
-        self.entities = set()
-
-    def prepare_exchange(self, exch, typ):
-        """Guarantees that given exchange exist
-        """
-
-    def digest(self):
-        """Digest topic marked as basic_consume
-        """
-        self.channel.start_consuming()
-
-    def close(self):
-        """Closes RabbitMQ connection
-        """
-        self.connection.close()
-
-    def prepare_queue(self, queue):
-        """Checks and creates RabbitMQ topic
-        """
-        self.channel.queue_declare(queue=queue)
-
-    def receive(self, ch, method, properties, body):
-        """Callback executed by stream after receiving notifications for
-        subscribed topic
-        """
-        print(" [x] Received %r" % body)
-        self.add_entity(body['bus_id'])
-        process_item = self.spk_sc.parallelize(body)
-        self.append_item(process_item)
-        self.check_anomaly()
-
-    def add_entity(self, entity_id):
-        self.entities.add(entity_id)
-
-    def append_item(self, item):
-        """Append item rdd to `data` rdd
-        """
-        self.data = self.data.union(item)
-
-    def check_anomaly(self):
-        if (self.data.count() > 100):
-            for u in self.entities:
-                result = self.data.filter(lambda a: u==a['bus_id'])
