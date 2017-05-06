@@ -23,11 +23,10 @@ class Shock():
     def start(self):
         """Starts processing.
         """
-        self.handler.spk_conf = SparkConf().set("spark.python.profile", "true")
-        self.handler.spk_sc = SparkContext()
+        self.handler.spk_sc = SparkContext(appName="interscity")
         self.handler.spk_ssc = StreamingContext(self.handler.spk_sc, 50) # TODO: use os.environ
         broker_conf = {"metadata.broker.list": self.handler.brokers}
-        self.handler.stream = KafkaUtils.createDirectStream(self.handler.spk_ssc, ["interscity"], broker_conf)
+        self.handler.stream = KafkaUtils.createStream(self.handler.spk_ssc, "kafka:2181", "spark-streaming-consumer", {'interscity': 1})
         self.handler.start()
 
     def stop(self):

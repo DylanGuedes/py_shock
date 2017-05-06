@@ -12,8 +12,6 @@ class BigDataArchitecture(metaclass=ABCMeta):
         self.environment = environment
 
     def register_action(self, priority, fn):
-        print("FUNCTION => ", fn)
-        print("PRIORTY => ", priority)
         heappush(self.actions, (priority, fn))
 
     @abstractmethod
@@ -32,30 +30,16 @@ class BigDataArchitecture(metaclass=ABCMeta):
     def drop_results(self):
         pass
 
-class LambdaArchitecture(BigDataArchitecture):
-    def start(self):
-        pass
-
-    def publish_results(self):
-        pass
-
-    def drop_results(self):
-        pass
-
-    def prepare(self):
-        pass
-
 class KappaArchitecture(BigDataArchitecture):
     def publish_array(self, arr):
         for u in arr:
             self.producer.send('new_results', json.dumps(u).encode('utf-8'))
 
     def publish_results(self, stream):
-        return stream
         stream.foreachRDD(lambda rdd: self.publish_array(rdd.collect()))
+        return stream
 
     def drop_results(self, stream):
-        # do nothing
         return stream
 
     def prepare(self):
@@ -72,8 +56,6 @@ class KappaArchitecture(BigDataArchitecture):
             pass
             # self.spk_ssc.awaitTerminationOrTimeout(2)
         else:
-            print("ANTES DO START=>")
             self.spk_ssc.start()
-            print("passei daqui")
 
 
