@@ -6,7 +6,7 @@ def countWords(stream):
     stream.pprint()
     return stream
 
-def splitWords(stream):
+def splitwords(stream):
     return stream.map(lambda x: x[1]).flatMap(lambda line: line.split(" "))
 
 def reduceByKey(stream):
