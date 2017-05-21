@@ -2,60 +2,90 @@ from heapq import heappush
 from abc import ABCMeta, abstractmethod
 from kafka import KafkaConsumer, KafkaProducer
 import json
+import os
 
-class BigDataArchitecture(metaclass=ABCMeta):
-    def __init__(self, brokers, environment="default"):
-        self.brokers = brokers
+from pyspark import SparkContext, SparkConf
+from pyspark.streaming.kafka import KafkaUtils
+from pyspark.streaming import StreamingContext
+
+class Handler(metaclass=ABCMeta):
+    def __init__(self, opts, environment="default"):
+        self.opts = opts
         self.actions = []
-        self.register_action(0xffff, self.publish_results)
-        self.register_action(0xffffff, self.drop_results)
         self.environment = environment
+        self.ingest()
+        self.store()
+        self.analyze()
+        self.publish()
+
+    @abstractmethod
+    def ingest(self):
+        """
+        =============================================
+        | **ingest** => store => analyze => publish |
+        =============================================
+        """
+        pass
+
+    @abstractmethod
+    def store(self):
+        """
+        =============================================
+        | ingest => **store** => analyze => publish |
+        =============================================
+        """
+        pass
+
+    @abstractmethod
+    def analyze(self):
+        """
+        =============================================
+        | ingest => store => **analyze** => publish |
+        =============================================
+        """
+        pass
+
+    @abstractmethod
+    def publish(self):
+        """
+        =============================================
+        | ingest => store => analyze => **publish** |
+        =============================================
+        """
+        pass
 
     def register_action(self, priority, fn):
         heappush(self.actions, (priority, fn))
 
-    @abstractmethod
-    def prepare(self):
+
+class InterSCity(Handler):
+    def ingest(self):
+        self.consumer = KafkaConsumer(bootstrap_servers=self.opts.get('kafka'))
+        self.consumer.subscribe(['new_pipeline_instruction'])
+        self.spk_sc = SparkContext(appName="interscity")
+        microbatchwindow = int(os.environ.get('BATCH_TIME') or 10)
+        self.spk_ssc = StreamingContext(self.spk_sc, microbatchwindow)
+        broker_conf = {"metadata.broker.list": self.opts.get('kafka')}
+        self.stream = KafkaUtils.createStream(self.spk_ssc, \
+                self.opts.get('zk'), "spark-streaming-consumer", {'interscity': 1})
+        self.master_stream = self.stream
+
+    def store(self):
         pass
 
-    @abstractmethod
-    def publish_results(self):
-        pass
-
-    @abstractmethod
-    def start(self):
-        pass
-
-    @abstractmethod
-    def drop_results(self):
-        pass
-
-class KappaArchitecture(BigDataArchitecture):
-    def publish_array(self, arr):
-        for u in arr:
-            self.producer.send('new_results', json.dumps(u).encode('utf-8'))
-
-    def publish_results(self, stream):
-        stream.foreachRDD(lambda rdd: self.publish_array(rdd.collect()))
-        return stream
-
-    def drop_results(self, stream):
-        return stream
-
-    def prepare(self):
-        self.producer = KafkaProducer(bootstrap_servers=self.brokers)
-
-    def start(self):
-        self.prepare()
+    def analyze(self):
         for priority, op in self.actions:
             self.stream = op(self.stream)
-        self.digest()
+
+    def publish(self, stream):
+        self.producer = KafkaProducer(bootstrap_servers=self.opts.get('kafka'))
+        stream.foreachRDD(lambda rdd: self.__publish_array(rdd.collect()))
+        return stream
 
     def digest(self):
-        if (self.environment == "test"):
-            pass
-            # self.spk_ssc.awaitTerminationOrTimeout(2)
-        else:
-            self.spk_ssc.start()
+        self.spk_ssc.start()
 
+    def __publish_array(self, arr):
+        for u in arr:
+            self.producer.send('new_results', json.dumps(u).encode('utf-8'))
 
