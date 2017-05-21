@@ -5,7 +5,7 @@ from kafka import KafkaConsumer, KafkaProducer
 sys.path.append(os.path.abspath('/shock'))
 
 from shock.core import Shock
-from shock.handlers import KappaArchitecture
+from shock.handlers import default_broker_host
 
 class ShockTests(unittest.TestCase):
     def setUp(self):
@@ -14,18 +14,10 @@ class ShockTests(unittest.TestCase):
         self.producer = KafkaProducer(bootstrap_servers="kafka:9092")
 
     def tearDown(self):
-        print("DONE!!")
+        pass
 
-    def test_check_do_nothing(self):
-        print("STARTING TEST!!")
-        self.consumer.subscribe(['integration-test'])
-        self.producer.send('integration-test', b'InterSCity test')
-        self.shock.start()
-        print("SHOCK STARTED!!")
-
-        for msg in self.consumer:
-            self.assertEqual("InterSCity test", msg)
-            break
+    def test_default_broker_host_construction(self):
+        self.assertEqual(default_broker_host(), "kafka:9092")
 
 if __name__ == "__main__":
     unittest.main()
