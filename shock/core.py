@@ -36,10 +36,7 @@ class Shock():
 
     def kafka_consume(self):
         """Consume Kafka's msg
-        Scheme:
-               ====================
-        ===>     file   ;  action 
-               ====================
+        ===>     "file   ;  action"
         """
         idx = 4
         for pkg in self.handler.consumer:
@@ -48,13 +45,13 @@ class Shock():
             filename, actionname = msg.split(";")
             filename = filename.strip()
             actionname = actionname.strip()
-            action = self.__resolve_actions(filename, actionname)
+            action = self.resolve_actions(filename, actionname)
             self.__register_action(idx, action)
             idx+=1
             self.handler.ingest()
             self.handler.digest()
 
-    def __resolve_actions(self, filename, actionname):
+    def resolve_actions(self, filename, actionname):
         """Load action from file inside shock folder
         """
         modulefullpath = "shock."+filename
@@ -63,5 +60,5 @@ class Shock():
         return getattr(action, actionname)
 
     def stop(self):
-        self.handler.spk_ssc.stop()
+        self.handler.stop()
 

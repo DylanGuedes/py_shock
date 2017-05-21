@@ -54,8 +54,16 @@ class Handler(metaclass=ABCMeta):
         """
         pass
 
+    @abstractmethod
+    def digest(self):
+        pass
+
     def register_action(self, priority, fn):
         heappush(self.actions, (priority, fn))
+
+    @abstractmethod
+    def stop(self):
+        pass
 
 
 class InterSCity(Handler):
@@ -89,3 +97,5 @@ class InterSCity(Handler):
         for u in arr:
             self.producer.send('new_results', json.dumps(u).encode('utf-8'))
 
+    def stop(self):
+        self.spk_scc.stop()
