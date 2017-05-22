@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 from kafka import KafkaConsumer, KafkaProducer
 import json
 import os
+from collections import deque
 
 from pyspark import SparkContext, SparkConf
 from pyspark.streaming.kafka import KafkaUtils
@@ -11,7 +12,7 @@ from pyspark.streaming import StreamingContext
 class Handler(metaclass=ABCMeta):
     def __init__(self, opts, environment="default"):
         self.opts = opts
-        self.actions = []
+        self.actions = deque()
         self.environment = environment
         self.ingest()
         self.store()
@@ -58,8 +59,8 @@ class Handler(metaclass=ABCMeta):
     def digest(self):
         pass
 
-    def register_action(self, priority, fn):
-        heappush(self.actions, (priority, fn))
+    def register_action(self, fn):
+        self.actions.appendleft(fn)
 
     @abstractmethod
     def stop(self):
@@ -82,13 +83,13 @@ class InterSCity(Handler):
         pass
 
     def analyze(self):
-        for priority, op in self.actions:
+        for op in self.actions:
             self.stream = op(self.stream)
 
-    def publish(self, stream):
+    def publish(self):
         self.producer = KafkaProducer(bootstrap_servers=self.opts.get('kafka'))
-        stream.foreachRDD(lambda rdd: self.__publish_array(rdd.collect()))
-        return stream
+        self.stream.foreachRDD(lambda rdd: self.__publish_array(rdd.collect()))
+        return self.stream
 
     def digest(self):
         self.spk_ssc.start()
@@ -98,4 +99,4 @@ class InterSCity(Handler):
             self.producer.send('new_results', json.dumps(u).encode('utf-8'))
 
     def stop(self):
-        self.spk_scc.stop()
+        self.spk_ssc.stop()

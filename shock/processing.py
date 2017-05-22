@@ -1,4 +1,4 @@
-def countWords(stream):
+def countwords(stream):
     stream = stream.map(lambda x: x[1]) \
             .flatMap(lambda line: line.split(" ")) \
             .map(lambda word: (word, 1)) \

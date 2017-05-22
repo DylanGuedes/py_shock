@@ -31,14 +31,13 @@ class Shock():
         self.handler.digest()
         self.kafka_consume()
 
-    def __register_action(self, priority, fn):
-        self.handler.register_action(priority, fn)
+    def __register_action(self, fn):
+        self.handler.register_action(fn)
 
     def kafka_consume(self):
         """Consume Kafka's msg
         ===>     "file   ;  action"
         """
-        idx = 4
         for pkg in self.handler.consumer:
             self.stop()
             msg = pkg.value.decode('ascii')
@@ -46,9 +45,12 @@ class Shock():
             filename = filename.strip()
             actionname = actionname.strip()
             action = self.resolve_actions(filename, actionname)
-            self.__register_action(idx, action)
-            idx+=1
+            self.__register_action(action)
+
             self.handler.ingest()
+            self.handler.store()
+            self.handler.analyze()
+            self.handler.publish()
             self.handler.digest()
 
     def resolve_actions(self, filename, actionname):
