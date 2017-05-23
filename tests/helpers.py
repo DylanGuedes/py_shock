@@ -7,7 +7,7 @@ class FakeKafkaPkg(object):
 
 class TestHandler(Handler):
     def ingest(self):
-        self.consumer = [FakeKafkaPkg(b"processing;countWords")]
+        self.consumer = [FakeKafkaPkg(b"processing;countwords")]
 
     def analyze(self):
         pass

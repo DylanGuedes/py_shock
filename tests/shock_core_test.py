@@ -8,10 +8,6 @@ from shock.core import Shock
 from tests.helpers import TestHandler
 
 @pytest.fixture
-def sc():
-    return pyspark.SparkContext.getOrCreate()
-
-@pytest.fixture
 def shock():
     return Shock(TestHandler)
 
