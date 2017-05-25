@@ -16,14 +16,14 @@ def reducebykey(stream):
     return stream
 
 def showresults(stream):
-    stream = stream.map(lambda x: x[1]) \
-            .flatMap(lambda line: line.split(" "))
     stream.pprint()
     return stream
 
 def todf(stream):
     if (stream.count() > 0):
-        return stream.toDF()
+        df = stream.toDF()
+        df.show()
+        return df
     else:
         return stream
 
@@ -38,3 +38,7 @@ def invalidtemperature(stream):
 
 def onlyvalues(stream):
     return stream.select("value")
+
+def cache(stream):
+    stream.cache()
+    return stream
