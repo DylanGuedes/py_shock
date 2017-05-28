@@ -1,6 +1,7 @@
 import os
 import json
 
+
 def getAction(fileName, actionName):
     """Load action from file inside shock folder
     """
@@ -8,6 +9,7 @@ def getAction(fileName, actionName):
     module = __import__(modulefullpath)
     action = getattr(module, fileName)
     return getattr(action, actionName)
+
 
 class Shock():
     """This class serves as an abstraction for the communication between Spark
@@ -17,10 +19,14 @@ class Shock():
         >>> shock = Shock(InterSCity)
 
     Kafka new stream (from kafka console):
-        >>> newstream;{"file": "processing","ingest": "kafkasubscribe","topic": "interscity","brokers": "kafka:9092","name":"mystream"}
-        >>> updatestream;{"file": "processing", "stream": "mystream", "store": "castentity"}
-        >>> updatestream;{"file": "processing", "stream": "mystream", "transform": "detectBadValues"}
-        >>> updatestream;{"file": "processing", "stream": "mystream", "publish": "outputstream"}
+        >>> newstream;{"file": "processing","ingest": "kafkasubscribe","topic":
+        >>> "interscity","brokers": "kafka:9092","name":"mystream"}
+        >>> updatestream;{"file": "processing", "stream": "mystream", "store":
+        >>> "castentity"}
+        >>> updatestream;{"file": "processing", "stream": "mystream", "transfor
+        >>> m": "detectBadValues"}
+        >>> updatestream;{"file": "processing", "stream": "mystream", "publish"
+        >>> : "outputstream"}
     """
 
     def __init__(self, handler, environment="default"):
@@ -29,7 +35,7 @@ class Shock():
 
     def waitForActions(self):
         """Consume Kafka's msg
-        ===>     "actionname ;  {"key1": "val1", "key2": "val2", "keyn": "valn"}"
+        ===> "actionname ;  {"key1": "val1", "key2": "val2", "keyn": "valn"}"
         """
         for pkg in self.handler.consumer:
             self.newActionSignal()
@@ -44,4 +50,3 @@ class Shock():
 
     def newActionSignal(self):
         self.handler.newActionSignal()
-

@@ -1,6 +1,7 @@
 from collections import deque
 from shock.core import getAction
 
+
 class Stream():
     """
     Usage:
@@ -77,4 +78,3 @@ class Stream():
         self.actions.appendleft(fn)
         self.state = self.initialState
         self.analyze()
-

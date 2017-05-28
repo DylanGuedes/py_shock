@@ -1,5 +1,6 @@
 from shock.handlers import Handler
 
+
 class FakeKafkaPkg(object):
     def __init__(self, s):
         self.value = s

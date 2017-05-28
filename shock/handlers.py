@@ -12,6 +12,7 @@ from pyspark.streaming import StreamingContext
 from shock.core import getAction
 from shock.streams import Stream
 
+
 def default_broker_host():
     kafka_host = os.environ.get('KAFKA_HOST')
     kafka_port = os.environ.get('KAFKA_PORT')
@@ -19,6 +20,7 @@ def default_broker_host():
         return kafka_host + ":" + kafka_port
     else:
         raise Exception('No kafka host or port configured!')
+
 
 def default_zk_host():
     zk_host = os.environ.get('ZK_HOST')
@@ -68,11 +70,13 @@ class InterSCity(Handler):
 
     def newStream(self, args):
         for u in self.requiredArgs():
-            if args.get(u) == None:
+            if args.get(u) is None:
                 raise Exception('Missing parameter: ', u)
 
         ingestAction = getAction(args["file"], args["ingest"])
-        ingestArgs = {"spark": self.spark, "topic": args["topic"], "brokers": args["brokers"]}
+        ingestArgs = {"spark": self.spark,
+                      "topic": args["topic"],
+                      "brokers": args["brokers"]}
 
         if (args.get("publish")):
             args["publish"] = getAction(args["file"], args["publish"])
@@ -98,4 +102,3 @@ class InterSCity(Handler):
                 stream.store()
         else:
             raise Exception('Source not found!')
-

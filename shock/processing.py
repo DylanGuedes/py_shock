@@ -1,6 +1,7 @@
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
 
+
 def kafkasubscribe(args):
     spark = args["spark"]
     topic = args["topic"]
@@ -10,8 +11,10 @@ def kafkasubscribe(args):
         .option("subscribe", topic).load() \
         .selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)")
 
+
 def outputstream(stream):
     return stream.writeStream.format("console").start()
+
 
 def castentity(stream):
     """
@@ -23,8 +26,9 @@ def castentity(stream):
     """
     json_objects = []
     for u in ["uuid", "capability", "timestamp", "value"]:
-        json_objects.append(get_json_object( stream.value, '$.'+u).alias(u))
-    return stream.select( json_objects )
+        json_objects.append(get_json_object(stream.value, '$.'+u).alias(u))
+    return stream.select(json_objects)
+
 
 def detectBadValues(stream):
     return stream.where("capability == 'air_quality'").where("value != 'boa'")
