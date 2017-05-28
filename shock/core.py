@@ -1,66 +1,47 @@
 import os
-from shock.entities import Bus
+import json
 
-def default_broker_host():
-    kafka_host = os.environ.get('KAFKA_HOST')
-    kafka_port = os.environ.get('KAFKA_PORT')
-    if (kafka_host and kafka_port):
-        return kafka_host + ":" + kafka_port
-    else:
-        raise Exception('No kafka host or port configured!')
-
-def default_zk_host():
-    zk_host = os.environ.get('ZK_HOST')
-    zk_port = os.environ.get('ZK_PORT')
-    if (zk_host and zk_port):
-        return zk_host + ":" + zk_port
-    else:
-        raise Exception('No zookeeper host and/or port configured!')
+def getAction(fileName, actionName):
+    """Load action from file inside shock folder
+    """
+    modulefullpath = "shock."+fileName
+    module = __import__(modulefullpath)
+    action = getattr(module, fileName)
+    return getattr(action, actionName)
 
 class Shock():
     """This class serves as an abstraction for the communication between Spark
     and Kafka
 
     Usage:
-        >>> shock = Shock(KappaArchitecture)
+        >>> shock = Shock(InterSCity)
+
+    Kafka new stream (from kafka console):
+        >>> newstream;{"file": "processing","ingest": "kafkasubscribe","topic": "interscity","brokers": "kafka:9092","name":"mystream"}
+        >>> updatestream;{"file": "processing", "stream": "mystream", "store": "castentity"}
+        >>> updatestream;{"file": "processing", "stream": "mystream", "transform": "detectBadValues"}
+        >>> updatestream;{"file": "processing", "stream": "mystream", "publish": "outputstream"}
     """
 
     def __init__(self, handler, environment="default"):
-        opts = {'kafka': default_broker_host(), 'zk': default_zk_host()}
-        self.handler = handler(opts, environment)
-        self.handler.digest()
-        self.kafka_consume()
+        self.handler = handler(environment)
+        self.waitForActions()
 
-    def __register_action(self, fn):
-        self.handler.register_action(fn)
-
-    def kafka_consume(self):
+    def waitForActions(self):
         """Consume Kafka's msg
-        ===>     "file   ;  action"
+        ===>     "actionname ;  {"key1": "val1", "key2": "val2", "keyn": "valn"}"
         """
         for pkg in self.handler.consumer:
-            self.stop()
+            self.newActionSignal()
             msg = pkg.value.decode('ascii')
-            filename, actionname = msg.split(";")
-            filename = filename.strip()
-            actionname = actionname.strip()
-            action = self.resolve_actions(filename, actionname)
-            self.__register_action(action)
+            self.handleNewKafkaMsg(msg)
 
-            self.handler.ingest()
-            self.handler.store()
-            self.handler.analyze()
-            self.handler.publish()
-            self.handler.digest()
+    def handleNewKafkaMsg(self, msg):
+        splittedMsg = msg.split(";")
+        actionName = splittedMsg[0].strip()
+        args = json.loads(splittedMsg[1])
+        self.handler.handle(actionName, args)
 
-    def resolve_actions(self, filename, actionname):
-        """Load action from file inside shock folder
-        """
-        modulefullpath = "shock."+filename
-        module = __import__(modulefullpath)
-        action = getattr(module, filename)
-        return getattr(action, actionname)
-
-    def stop(self):
-        self.handler.stop()
+    def newActionSignal(self):
+        self.handler.newActionSignal()
 

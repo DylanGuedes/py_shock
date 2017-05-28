@@ -11,7 +11,3 @@ from tests.helpers import TestHandler
 def shock():
     return Shock(TestHandler)
 
-def test_resolve_actions(shock):
-    from shock.processing import splitwords
-    assert shock.resolve_actions("processing", "splitwords")==splitwords
-

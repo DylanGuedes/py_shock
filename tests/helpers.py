@@ -6,8 +6,8 @@ class FakeKafkaPkg(object):
 
 
 class TestHandler(Handler):
-    def ingest(self):
-        self.consumer = [FakeKafkaPkg(b"processing;countwords")]
+    def setup(self):
+        self.consumer = [FakeKafkaPkg(b"newstream;{}")]
 
     def analyze(self):
         pass
@@ -24,3 +24,5 @@ class TestHandler(Handler):
     def stop(self):
         pass
 
+    def handle(self, actionName, args):
+        pass
