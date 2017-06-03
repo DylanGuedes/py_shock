@@ -11,6 +11,7 @@ from pyspark.sql import SparkSession
 from pyspark.streaming import StreamingContext
 from shock.core import getAction
 from shock.streams import Stream
+from shock.processing import readJsonAndServeWebsockets
 
 
 def default_broker_host():
@@ -54,6 +55,9 @@ class Handler(metaclass=ABCMeta):
 
 class InterSCity(Handler):
     def setup(self):
+        """
+        ws://localhost:4000/socket/websocket
+        """
         self.sc = SparkContext(appName="interscity")
         self.spark = SparkSession(self.sc)
         self.consumer = KafkaConsumer(bootstrap_servers=default_broker_host())
@@ -67,6 +71,8 @@ class InterSCity(Handler):
             self.newStream(args)
         elif (actionName == "updatestream"):
             self.updateStream(args)
+        elif (actionName == "flush"):
+            self.flush()
 
     def newStream(self, args):
         for u in self.requiredArgs():
@@ -102,3 +108,6 @@ class InterSCity(Handler):
                 stream.store()
         else:
             raise Exception('Source not found!')
+
+    def flush(self):
+        readJsonAndServeWebsockets(self.spark)

@@ -15,16 +15,9 @@ class Stream():
         self.ingestArgs = ingestArgs
         self.actions = deque()
         self.finalStream = None
-
-        if (args.get("publish")):
-            self.publishAction(optionalActions["publish"])
-        else:
-            self.publishAction = None
-
-        if (args.get("store")):
-            self.storeAction(optionalActions["store"])
-        else:
-            self.storeAction = None
+        self.publishAction = None
+        self.storeAction = None
+        self.state = None
         self.ingest()
 
     def pipelineAppend(self, fn):

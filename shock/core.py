@@ -43,10 +43,12 @@ class Shock():
             self.handleNewKafkaMsg(msg)
 
     def handleNewKafkaMsg(self, msg):
+        """normalize Kafka message and send to be handled by the handler"""
         splittedMsg = msg.split(";")
         actionName = splittedMsg[0].strip()
         args = json.loads(splittedMsg[1])
         self.handler.handle(actionName, args)
 
     def newActionSignal(self):
+        """Alert handler about new action arrived"""
         self.handler.newActionSignal()
