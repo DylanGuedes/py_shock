@@ -7,96 +7,116 @@ from collections import deque
 
 from pyspark import SparkContext, SparkConf
 from pyspark.streaming.kafka import KafkaUtils
+from pyspark.sql import SparkSession
 from pyspark.streaming import StreamingContext
+from shock.core import getAction
+from shock.streams import Stream
+from shock.sinks import flushAndServeWebsockets
+
+
+def default_broker_host():
+    kafka_host = os.environ.get('KAFKA_HOST')
+    kafka_port = os.environ.get('KAFKA_PORT')
+    if (kafka_host and kafka_port):
+        return kafka_host + ":" + kafka_port
+    else:
+        raise Exception('No kafka host or port configured!')
+
+
+def default_zk_host():
+    zk_host = os.environ.get('ZK_HOST')
+    zk_port = os.environ.get('ZK_PORT')
+    if (zk_host and zk_port):
+        return zk_host + ":" + zk_port
+    else:
+        raise Exception('No zookeeper host and/or port configured!')
+
 
 class Handler(metaclass=ABCMeta):
     def __init__(self, opts, environment="default"):
+        self.sources = {}
         self.opts = opts
-        self.actions = deque()
         self.environment = environment
-        self.ingest()
-        self.store()
-        self.analyze()
-        self.publish()
+        self.setup()
 
-    @abstractmethod
-    def ingest(self):
-        """
-        =============================================
-        | **ingest** => store => analyze => publish |
-        =============================================
-        """
+
+    def registerSource(self, sourceName, source):
+        self.sources[sourceName] = source
+
+
+    def setup(self):
         pass
 
+
     @abstractmethod
-    def store(self):
-        """
-        =============================================
-        | ingest => **store** => analyze => publish |
-        =============================================
-        """
+    def handle(self, actionName, args):
         pass
 
-    @abstractmethod
-    def analyze(self):
-        """
-        =============================================
-        | ingest => store => **analyze** => publish |
-        =============================================
-        """
-        pass
 
-    @abstractmethod
-    def publish(self):
-        """
-        =============================================
-        | ingest => store => analyze => **publish** |
-        =============================================
-        """
-        pass
-
-    @abstractmethod
-    def digest(self):
-        pass
-
-    def register_action(self, fn):
-        self.actions.appendleft(fn)
-
-    @abstractmethod
-    def stop(self):
+    def newActionSignal(self):
         pass
 
 
 class InterSCity(Handler):
-    def ingest(self):
-        self.consumer = KafkaConsumer(bootstrap_servers=self.opts.get('kafka'))
+    def setup(self):
+        """
+        ws://localhost:4000/socket/websocket
+        """
+        self.sc = SparkContext(appName="interscity")
+        self.spark = SparkSession(self.sc)
+        self.consumer = KafkaConsumer(bootstrap_servers=default_broker_host())
         self.consumer.subscribe(['new_pipeline_instruction'])
-        self.spk_sc = SparkContext(appName="interscity")
-        microbatchwindow = int(os.environ.get('BATCH_TIME') or 10)
-        self.spk_ssc = StreamingContext(self.spk_sc, microbatchwindow)
-        broker_conf = {"metadata.broker.list": self.opts.get('kafka')}
-        self.stream = KafkaUtils.createStream(self.spk_ssc, \
-                self.opts.get('zk'), "spark-streaming-consumer", {'interscity': 1})
-        self.master_stream = self.stream
 
-    def store(self):
-        pass
 
-    def analyze(self):
-        for op in self.actions:
-            self.stream = op(self.stream)
+    def requiredArgs(self):
+        return ["topic", "brokers", "name", "file", "ingest"]
 
-    def publish(self):
-        self.producer = KafkaProducer(bootstrap_servers=self.opts.get('kafka'))
-        self.stream.foreachRDD(lambda rdd: self.__publish_array(rdd.collect()))
-        return self.stream
 
-    def digest(self):
-        self.spk_ssc.start()
+    def handle(self, actionName, args):
+        if (actionName == "newstream"):
+            self.newStream(args)
+        elif (actionName == "updatestream"):
+            self.updateStream(args)
+        elif (actionName == "flush"):
+            self.flush()
 
-    def __publish_array(self, arr):
-        for u in arr:
-            self.producer.send('new_results', json.dumps(u).encode('utf-8'))
 
-    def stop(self):
-        self.spk_ssc.stop()
+    def newStream(self, args):
+        for u in self.requiredArgs():
+            if args.get(u) is None:
+                raise Exception('Missing parameter: ', u)
+
+        ingestAction = getAction(args["file"], args["ingest"])
+        ingestArgs = {"spark": self.spark,
+                      "topic": args["topic"],
+                      "brokers": args["brokers"]}
+
+        if (args.get("publish")):
+            args["publish"] = getAction(args["file"], args["publish"])
+
+        if (args.get("store")):
+            args["store"] = getAction(args["file"], args["store"])
+
+        st = Stream(ingestAction, ingestArgs, args)
+        self.registerSource(args["name"], st)
+
+
+    def updateStream(self, args):
+        stream = self.sources.get(args["stream"])
+        if (stream):
+            if (args.get("publish")):
+                stream.publishAction = getAction(args["file"], args["publish"])
+                stream.publish()
+            elif (args.get("transform")):
+                fn = getAction(args["file"], args["transform"])
+                stream.pipelineAppend(fn)
+            elif (args.get("store")):
+                fn = getAction(args["file"], args["store"])
+                stream.storeAction = fn
+                stream.store()
+        else:
+            raise Exception('Source not found!')
+
+
+    def flush(self):
+        flushAndServeWebsockets(self.spark)

@@ -1,13 +1,14 @@
 from shock.handlers import Handler
 
+
 class FakeKafkaPkg(object):
     def __init__(self, s):
         self.value = s
 
 
 class TestHandler(Handler):
-    def ingest(self):
-        self.consumer = [FakeKafkaPkg(b"processing;countwords")]
+    def setup(self):
+        self.consumer = [FakeKafkaPkg(b"newstream;{}")]
 
     def analyze(self):
         pass
@@ -24,3 +25,5 @@ class TestHandler(Handler):
     def stop(self):
         pass
 
+    def handle(self, actionName, args):
+        pass

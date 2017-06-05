@@ -1,17 +1,13 @@
 import pytest
-
 import findspark
 findspark.init()
-import pyspark
 
-from shock.core import Shock
-from tests.helpers import TestHandler
+from shock.core import Shock  # nopep8
+from tests.helpers import TestHandler  # nopep8
+
+import pyspark  # nopep8
+
 
 @pytest.fixture
 def shock():
     return Shock(TestHandler)
-
-def test_resolve_actions(shock):
-    from shock.processing import splitwords
-    assert shock.resolve_actions("processing", "splitwords")==splitwords
-

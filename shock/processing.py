@@ -1,44 +1,36 @@
-def countwords(stream):
-    stream = stream.map(lambda x: x[1]) \
-            .flatMap(lambda line: line.split(" ")) \
-            .map(lambda word: (word, 1)) \
-            .reduceByKey(lambda a, b: a+b)
-    stream.pprint()
-    return stream
+from pyspark.sql.types import *
+from pyspark.sql.functions import *
 
-def splitwords(stream):
-    return stream.map(lambda x: x[1]).flatMap(lambda line: line.split(" "))
+import asyncio
+import websockets
+import json
 
-def reducebykey(stream):
-    stream.map(lambda word: (word, 1)) \
-            .reduceByKey(lambda a, b: a+b)
-    stream.pprint()
-    return stream
 
-def showresults(stream):
-    stream.pprint()
-    return stream
+def castentity(stream):
+    """
+    Return a new dataframe with normalized attrs from `value`
+    # Params
+    stream => KafkaStream or Dataframe
+    entity => Entity with attributes
 
-def todf(stream):
-    if (stream.count() > 0):
-        df = stream.toDF()
-        df.show()
-        return df
-    else:
-        return stream
+    """
+    json_objects = []
+    for u in ["uuid", "capability", "timestamp", "value"]:
+        json_objects.append(get_json_object(stream.value, '$.'+u).alias(u))
+    return stream.select(json_objects)
 
-def filterbus(stream):
-    return stream.filter(lambda a: "bus" in a)
 
-def temperatures(stream):
-    return stream.where("entity == 'temperature'")
+def detectBadValues(stream):
+    return stream.where("capability == 'air_quality'").where("value != 'boa'")
 
-def invalidtemperature(stream):
-    return stream.where("value > 273.15")
 
-def onlyvalues(stream):
-    return stream.select("value")
+def detectGoodValues(stream):
+    return stream.where("capability == 'air_quality'").where("value == 'boa'")
 
-def cache(stream):
-    stream.cache()
-    return stream
+
+def interscitySchema():
+    return StructType() \
+            .add("uuid", "string") \
+            .add("capability", "string") \
+            .add("timestamp", "string") \
+            .add("value", "string")
