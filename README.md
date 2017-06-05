@@ -39,3 +39,10 @@ $ ./bin/pyspark --conf "spark.mongodb.input.uri=mongodb://127.0.0.1/sp.weather" 
 ...
 ...
 ```
+
+## Running the docs
+
+1. Run
+```
+$ sphinx-build docs/ docs_mount/
+```
