@@ -20,6 +20,12 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__name__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__name__), '../shock'))
+
+autodoc_mock_imports = ['pyspark', 'pyspark.streaming', 'pyspark.sql',
+        'pyspark.sql.types', 'pyspark.sql.functions', 'pyspark.streaming.kafka']
 
 
 # -- General configuration ------------------------------------------------
@@ -37,7 +43,6 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.imgmath',
     'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
-    'sphinx.ext.doctest',
     'sphinx.ext.viewcode']
 
 # Add any paths that contain templates here, relative to this directory.
