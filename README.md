@@ -1,5 +1,20 @@
 # Shock - InterSCity's Data Pipeline
 
+## Running Shock
+
+1. Install pip packages
+```
+$ pip install {kafka-python,asyncio,websockets}
+```
+
+2. Run the bin with the correct packages
+```
+ SPARK_HOME/bin/spark-submit \
+--packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.1.0 \
+--packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.1.0 \
+/shock/shock.py
+```
+
 ## Usage
 
 1. Register functions in topic `new_pipeline_instruction` with the following syntax:
@@ -38,4 +53,11 @@ $ ./bin/pyspark --conf "spark.mongodb.input.uri=mongodb://127.0.0.1/sp.weather" 
 ...
 ...
 ...
+```
+
+## Running the docs
+
+1. Run
+```
+$ sphinx-build docs/ docs_mount/
 ```

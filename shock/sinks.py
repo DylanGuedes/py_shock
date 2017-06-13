@@ -1,24 +1,80 @@
-def genericSink(stream, sinkName):
-    return stream.writeStream.format(sinkName) \
-            .option("checkpointLocation", "/checkpoints") \
+from typing import TypeVar
+from pyspark.sql import SparkSession
+import time
+from shock.processing import interscitySchema
+import asyncio
+import websockets
+import json
+
+StructuredStream = TypeVar('StructuredStream')
+OutputStream = TypeVar('OutputStream')
+
+def genericSink(stream: StructuredStream, sinkName: str, args: dict) -> OutputStream:
+    """Return a output stream from a generic sink type.
+
+    Args:
+        stream (StructuredStream): processed stream.
+        sinkName (str): Sink type.
+
+    Returns:
+        OutputStream: Stream output
+    """
+    time.sleep(1)
+    streamName = args["stream"]
+    return stream.writeStream \
+            .outputMode('append') \
+            .format(sinkName) \
+            .option("checkpointLocation", "/"+streamName) \
             .option("path", "/analysis") \
             .start()
 
 
-def consoleSink(stream):
-    return genericSink(stream, "console")
+def consoleSink(stream: StructuredStream, args: dict) -> OutputStream:
+    """Prints stream output to terminal.
+
+    Args:
+        stream (StructuredStream): processed stream.
+
+    Returns:
+        OutputStream: Stream output
+    """
+    return genericSink(stream, "console", args)
 
 
-def parquetSink(stream):
-    return genericSink(stream, "parquet")
+def parquetSink(stream: StructuredStream, args: dict) -> OutputStream:
+    """Write stream output to Parquet files. The content will be saved at /analysis
+
+    Args:
+        stream (StructuredStream): processed stream.
+
+    Returns:
+        OutputStream: Stream output
+    """
+    return genericSink(stream, "parquet", args)
 
 
-def jsonSink(stream):
-    return genericSink(stream, "json")
+def jsonSink(stream: StructuredStream, args: dict) -> OutputStream:
+    """Write stream output to json files. The content will be saved at /analysis
+
+    Args:
+        stream (StructuredStream): processed stream.
+
+    Returns:
+        OutputStream: Stream output
+    """
+    return genericSink(stream, "json", args)
 
 
-def flushAndServeWebsockets(spark):
-    sch = interscitySchema
+def flushAndServeWebsockets(spark: SparkSession) -> None:
+    """Publish parquet results written in /analysis via websocket
+
+    Args:
+        spark (SparkSession): processed stream.
+
+    Returns:
+        None
+    """
+    sch = interscitySchema()
     try:
         df = spark.read.parquet("/analysis")
     except:
