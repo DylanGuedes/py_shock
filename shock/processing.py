@@ -1,17 +1,21 @@
-from pyspark.sql.types import *
+from pyspark.sql.types import StructType as SparkStructType
 from pyspark.sql.functions import *
+from pyspark.sql.streaming import DataStreamWriter, DataStreamReader
+from pyspark.sql import DataFrame as SparkDataFrame
 
 import asyncio
 import websockets
 import json
+from typing import TypeVar
 
+def castentity(stream: DataStreamReader, args: dict) -> DataStreamReader:
+    """Return a new dataframe with normalized attrs from `value`
 
-def castentity(stream):
-    """
-    Return a new dataframe with normalized attrs from `value`
-    # Params
-    stream => KafkaStream or Dataframe
-    entity => Entity with attributes
+    Args:
+        stream (Stream): processed stream.
+
+    Returns:
+        Stream: casted stream.
 
     """
     json_objects = []
@@ -20,16 +24,30 @@ def castentity(stream):
     return stream.select(json_objects)
 
 
-def detectBadValues(stream):
-    return stream.where("capability == 'air_quality'").where("value != 'boa'")
+def streamFilter(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
+    """Filter stream.
+
+    Args:
+        stream (SparkDataFrame): processed stream.
+        args (dict): options to be used in the filter.
+
+    Returns:
+        SparkDataFrame: filtered stream.
+    """
+    query = args["query"]
+    return stream.where(query)
 
 
-def detectGoodValues(stream):
-    return stream.where("capability == 'air_quality'").where("value == 'boa'")
+def interscitySchema() -> SparkStructType:
+    """Capabilities schema used in InterSCity.
 
+    Args:
+        nope
 
-def interscitySchema():
-    return StructType() \
+    Returns:
+        SparkStructType: the schema used in InterSCity capabilities system.
+    """
+    return SparkStructType() \
             .add("uuid", "string") \
             .add("capability", "string") \
             .add("timestamp", "string") \

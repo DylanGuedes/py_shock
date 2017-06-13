@@ -25,7 +25,8 @@ sys.path.append(os.path.join(os.path.dirname(__name__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__name__), '../shock'))
 
 autodoc_mock_imports = ['pyspark', 'pyspark.streaming', 'pyspark.sql',
-        'pyspark.sql.types', 'pyspark.sql.functions', 'pyspark.streaming.kafka']
+'pyspark.sql.types', 'pyspark.sql.functions', 'pyspark.streaming.kafka',
+'pyspark.sql.streaming']
 
 
 # -- General configuration ------------------------------------------------

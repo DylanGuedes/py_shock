@@ -44,6 +44,5 @@ shock.ingestion docs
 shock.processing docs
 =====================
 .. autofunction:: shock.processing.castentity
-.. autofunction:: shock.processing.detectBadValues
-.. autofunction:: shock.processing.detectGoodValues
+.. autofunction:: shock.processing.streamFilter
 .. autofunction:: shock.processing.interscitySchema

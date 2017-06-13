@@ -1,9 +1,21 @@
 import os
 import json
 
+from typing import Callable, TypeVar
 
-def getAction(fileName, actionName):
+AnyFunction = Callable
+Handler = TypeVar('Handler')
+
+
+def getAction(fileName: str, actionName: str) -> AnyFunction:
     """Load action from file inside shock folder
+
+    Args:
+        fileName (str): file that has the action.
+        actionName (str): action that will be extracted from file.
+
+    Returns:
+        action: the call result.
     """
     modulefullpath = "shock."+fileName
     module = __import__(modulefullpath)
@@ -15,40 +27,64 @@ class Shock():
     """This class serves as an abstraction for the communication between Spark
     and Kafka
 
-    Usage:
+    Examples (py):
         >>> shock = Shock(InterSCity)
 
-    Kafka new stream (from kafka console):
-        >>> newstream;{"file": "processing","ingest": "kafkasubscribe","topic":
-        >>> "interscity","brokers": "kafka:9092","name":"mystream"}
-        >>> updatestream;{"file": "processing", "stream": "mystream", "store":
-        >>> "castentity"}
-        >>> updatestream;{"file": "processing", "stream": "mystream", "transfor
-        >>> m": "detectBadValues"}
-        >>> updatestream;{"file": "processing", "stream": "mystream", "publish"
-        >>> : "outputstream"}
+    Examples (kafka-consumer):
+        >>> newStream;{"stream": "mynicestream"}
+        >>> ingestion;{"stream": "mynicestream", "shock_action": "bestaction"}
+        >>> store;{"stream": "mynicestream", "shock_action": "castentity"}
+        >>> publish;{"stream": "mynicestream", "shock_action": "parquetSink"} 
     """
 
-    def __init__(self, handler, environment="default"):
+    def __init__(self, handler: Handler, environment="default") -> None:
+        """Shock constructor.
+
+        Args:
+            handler (Handler): A Shock handler to be used.
+
+        Examples:
+            >>> sck = Shock(InterSCity)
+        """
         self.handler = handler(environment)
         self.waitForActions()
 
-    def waitForActions(self):
+    def waitForActions(self) -> None:
         """Consume Kafka's msg
-        ===> "actionname ;  {"key1": "val1", "key2": "val2", "keyn": "valn"}"
+
+        Expected Data:
+            "actionname ;  {"key1": "val1", "key2": "val2", "keyn": "valn"}"
         """
         for pkg in self.handler.consumer:
             self.newActionSignal()
             msg = pkg.value.decode('ascii')
             self.handleNewKafkaMsg(msg)
 
-    def handleNewKafkaMsg(self, msg):
-        """normalize Kafka message and send to be handled by the handler"""
-        splittedMsg = msg.split(";")
-        actionName = splittedMsg[0].strip()
-        args = json.loads(splittedMsg[1])
-        self.handler.handle(actionName, args)
+    def handleNewKafkaMsg(self, msg: str) -> None:
+        """Normalize Kafka message and send to be handled by the handler
 
-    def newActionSignal(self):
-        """Alert handler about new action arrived"""
+        Args:
+            msg (str): msg received, with at least one `;` char
+
+        Returns:
+            no return
+        """
+        splittedMsg = msg.split(";")
+        try:
+            actionName = splittedMsg[0].strip()
+            args = json.loads(splittedMsg[1])
+            self.handler.handle(actionName, args)
+        except:
+            print("Wrong action called!")
+
+
+    def newActionSignal(self) -> None:
+        """Alert handler about new action arrived.
+
+        Args:
+            no arguments
+
+        Returns:
+            no return
+        """
         self.handler.newActionSignal()

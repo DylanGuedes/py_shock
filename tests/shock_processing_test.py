@@ -1,11 +1,11 @@
 import pytest
 import findspark
 findspark.init()
-
-import pyspark  # nopep8
-import pyspark.sql  # nopep8
-from shock.core import Shock  # nopep8
-from tests.helpers import TestHandler  # nopep8
+import pyspark
+import pyspark.sql
+from shock.core import Shock
+from tests.helpers import TestHandler
+from pyspark.sql.types import Row
 
 
 @pytest.fixture
@@ -29,13 +29,40 @@ def sqlcontext():
     return (pyspark.SQLContext(sc), sc)
 
 
-def testSchema(sc, spark):
+def testFilter(sc, spark):
+    from shock.processing import streamFilter, castentity
+    jsonString1 = '{"uuid": "aaaa", "capability": "temperature",\
+                   "timestamp": "today", "value": 15}'
+    jsonString2 = '{"uuid": "bbbb", "capability": "temperature",\
+                   "timestamp": "today", "value": 15}'
+    jsonString3 = '{"uuid": "cccc", "capability": "temperature",\
+                   "timestamp": "today", "value": 15}'
+    jsonString4 = '{"uuid": "aaaa", "capability": "temperature",\
+                   "timestamp": "today", "value": 15}'
+    df = sc.parallelize([
+        {'value': jsonString1},
+        {'value': jsonString2},
+        {'value': jsonString3},
+        {'value': jsonString4}
+    ]).toDF()
+    df1 = castentity(df, dict())
+
+    args = {'query': "uuid == 'aaaa'"}
+    rdd = streamFilter(df1, args).rdd
+    arr = rdd.collect()
+    assert len(arr) == 2
+    assert arr[0].uuid == 'aaaa'
+    assert arr[1].uuid == 'aaaa'
+
+
+def testCastEntities(sc, spark):
     from shock.processing import castentity
     jsonString = '{"uuid": "abcdef", "capability": "temperature",\
                    "timestamp": "today", "value": 15}'
     df = sc.parallelize([{'value': jsonString}]).toDF()
-    df1 = castentity(df)
+    df1 = castentity(df, dict())
     df1.show()
-
-    assert df1 == 2
-    assert df1.show() == 3
+    row = Row(capability='temperature', timestamp='today', uuid='abcdef', value='15')
+    row2 = df1.rdd.collect()[0]
+    assert row.capability == row2.capability
+    assert row.timestamp == row2.timestamp

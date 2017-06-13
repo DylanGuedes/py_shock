@@ -12,111 +12,193 @@ from pyspark.streaming import StreamingContext
 from shock.core import getAction
 from shock.streams import Stream
 from shock.sinks import flushAndServeWebsockets
-
-
-def default_broker_host():
-    kafka_host = os.environ.get('KAFKA_HOST')
-    kafka_port = os.environ.get('KAFKA_PORT')
-    if (kafka_host and kafka_port):
-        return kafka_host + ":" + kafka_port
-    else:
-        raise Exception('No kafka host or port configured!')
-
-
-def default_zk_host():
-    zk_host = os.environ.get('ZK_HOST')
-    zk_port = os.environ.get('ZK_PORT')
-    if (zk_host and zk_port):
-        return zk_host + ":" + zk_port
-    else:
-        raise Exception('No zookeeper host and/or port configured!')
+import warnings
 
 
 class Handler(metaclass=ABCMeta):
-    def __init__(self, opts, environment="default"):
+    """Handler that will be used to take care of new Kafka messages.
+
+    The handler needs to override the `handle` method.
+    """
+    def __init__(self, opts: dict, environment="default") -> None:
         self.sources = {}
         self.opts = opts
         self.environment = environment
         self.setup()
 
+    def registerSource(self, sourceName: str, source) -> None:
+        """
+        Register a source type (can be a string).
 
-    def registerSource(self, sourceName, source):
+        Args:
+            sourceName (str): Name of the source that will be added.
+            source (class): Instance of the source that will be added.
+                Can be a Stream.
+
+        Returns:
+            no return
+        """
         self.sources[sourceName] = source
 
-
     def setup(self):
-        pass
+        """
+        Setups the handler.
+        
+        It will be called in the instantiation, and should be overridden when
+        needed.
 
+        Args:
+            no arguments.
+
+        Returns:
+            no return.
+        """
+        pass
 
     @abstractmethod
-    def handle(self, actionName, args):
+    def handle(self, actionName: str, args: dict) -> None:
+        """Hook that handles a given Kafka's message.
+
+        Args:
+            actionName (str): Name of the action called.
+            args (dict): Arguments that the action are using.
+
+        Returns:
+            no return.
+        """
         pass
 
-
     def newActionSignal(self):
+        """ Hook that will be executed when new Kafka's message arrive.
+        """
         pass
 
 
 class InterSCity(Handler):
     def setup(self):
-        """
-        ws://localhost:4000/socket/websocket
-        """
         self.sc = SparkContext(appName="interscity")
         self.spark = SparkSession(self.sc)
-        self.consumer = KafkaConsumer(bootstrap_servers=default_broker_host())
+        self.consumer = KafkaConsumer(bootstrap_servers="kafka:9092")
         self.consumer.subscribe(['new_pipeline_instruction'])
 
-
-    def requiredArgs(self):
-        return ["topic", "brokers", "name", "file", "ingest"]
-
-
     def handle(self, actionName, args):
-        if (actionName == "newstream"):
+        print("Handling action ", actionName)
+        if (actionName == "ingestion"):
+            self.handleIngestion(args)
+        elif (actionName == "store"):
+            self.handleStore(args)
+        elif (actionName == "process"):
+            self.handleProcess(args)
+        elif (actionName == "publish"):
+            self.handlePublish(args)
+        elif (actionName == "newStream"):
             self.newStream(args)
-        elif (actionName == "updatestream"):
-            self.updateStream(args)
         elif (actionName == "flush"):
             self.flush()
-
+        elif (actionName == "start"):
+            self.startStream(args)
 
     def newStream(self, args):
-        for u in self.requiredArgs():
-            if args.get(u) is None:
-                raise Exception('Missing parameter: ', u)
+        """Creates new Shock stream.
 
-        ingestAction = getAction(args["file"], args["ingest"])
-        ingestArgs = {"spark": self.spark,
-                      "topic": args["topic"],
-                      "brokers": args["brokers"]}
+        The stream will be registered in the sources dict.
 
-        if (args.get("publish")):
-            args["publish"] = getAction(args["file"], args["publish"])
+        Args:
+            args (dict): Arguments used for the registration.
 
-        if (args.get("store")):
-            args["store"] = getAction(args["file"], args["store"])
+        Returns:
+            no return.
+        """
+        name = args["stream"]
+        st = Stream(name)
+        self.registerSource(args["stream"], st)
 
-        st = Stream(ingestAction, ingestArgs, args)
-        self.registerSource(args["name"], st)
+    def handleIngestion(self, args):
+        """Handle the new ingestion method of a stream.
 
+        Args:
+            args (dict): Arguments used for the ingestion.
 
-    def updateStream(self, args):
+        Returns:
+            no return.
+        """
         stream = self.sources.get(args["stream"])
         if (stream):
-            if (args.get("publish")):
-                stream.publishAction = getAction(args["file"], args["publish"])
-                stream.publish()
-            elif (args.get("transform")):
-                fn = getAction(args["file"], args["transform"])
-                stream.pipelineAppend(fn)
-            elif (args.get("store")):
-                fn = getAction(args["file"], args["store"])
-                stream.storeAction = fn
-                stream.store()
+            args["spark"] = self.spark
+            fn = getAction("ingestion", args["shock_action"])
+            stream.ingestAction = fn
+            stream.ingestArgs = args
         else:
-            raise Exception('Source not found!')
+            raise Exception('Stream not found!')
 
+
+    def handleStore(self, args):
+        warnings.warn('deprecated', DeprecationWarning)
+        stream = self.sources.get(args["stream"])
+        if (stream):
+            fn = getAction("processing", args["shock_action"])
+            stream.storeAction = fn
+            stream.storeArgs = args
+        else:
+            raise Exception('Stream not found!')
+
+    def handleProcess(self, args):
+        """Handle the new process method of a stream.
+
+        Args:
+            args (dict): Arguments used for the processing.
+
+        Returns:
+            no return.
+        """
+        stream = self.sources.get(args["stream"])
+        if (stream):
+            fn = getAction("processing", args["shock_action"])
+            stream.processAction = fn
+            stream.processArgs = args
+        else:
+            raise Exception('Stream not found!')
+
+    def handlePublish(self, args):
+        """Handle the new publish method of a stream.
+
+        Args:
+            args (dict): Arguments used for the publish.
+
+        Returns:
+            no return.
+        """
+        stream = self.sources.get(args["stream"])
+        if (stream):
+            fn = getAction("sinks", args["shock_action"])
+            stream.publishAction = fn
+            stream.publishArgs = args
+        else:
+            raise Exception('Stream not found!')
 
     def flush(self):
+        """Flushs pending actions. Used for sending websockets.
+
+        Args:
+            no arguments.
+
+        Returns:
+            no return.
+        """
+        warnings.warn('deprecated', DeprecationWarning)
         flushAndServeWebsockets(self.spark)
+
+    def startStream(self, args):
+        """Starts a stream.
+
+        Args:
+            args (dict): Arguments used to start the stream.
+
+        Returns:
+            no return.
+        """
+        stream = self.sources.get(args["stream"])
+        if (stream):
+            stream.ingest()
+        else:
+            raise Exception('Stream not found!')
