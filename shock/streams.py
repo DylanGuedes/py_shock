@@ -1,6 +1,5 @@
 from collections import deque
 from shock.core import getAction
-import time
 
 
 class Stream():
@@ -24,7 +23,10 @@ class Stream():
         self.processArgs = None
         self.state = None
 
-    def ingest(self):
+    def start(self):
+        self.__ingest()
+
+    def __ingest(self):
         """
         =============================================
         | **ingest** => store => analyze => publish |
@@ -35,7 +37,7 @@ class Stream():
         self.initialState = self.state
         self.store()
 
-    def store(self):
+    def __store(self):
         """
         =============================================
         | ingest => **store** => analyze => publish |
@@ -46,7 +48,7 @@ class Stream():
             self.state = self.storeAction(self.state, self.storeArgs)
         self.analyze()
 
-    def analyze(self):
+    def __analyze(self):
         """
         =============================================
         | ingest => store => **analyze** => publish |
@@ -57,7 +59,7 @@ class Stream():
             self.processAction(self.state, self.processArgs)
         self.publish()
 
-    def publish(self):
+    def __publish(self):
         """
         =============================================
         | ingest => store => analyze => **publish** |

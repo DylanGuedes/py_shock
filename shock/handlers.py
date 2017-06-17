@@ -84,21 +84,21 @@ class InterSCity(Handler):
     def handle(self, actionName, args):
         print("Handling action ", actionName)
         if (actionName == "ingestion"):
-            self.handleIngestion(args)
+            self.__handleIngestion(args)
         elif (actionName == "store"):
-            self.handleStore(args)
+            self.__handleStore(args)
         elif (actionName == "process"):
-            self.handleProcess(args)
+            self.__handleProcess(args)
         elif (actionName == "publish"):
-            self.handlePublish(args)
+            self.__handlePublish(args)
         elif (actionName == "newStream"):
-            self.newStream(args)
+            self.__newStream(args)
         elif (actionName == "flush"):
-            self.flush()
+            self.__flush()
         elif (actionName == "start"):
-            self.startStream(args)
+            self.__startStream(args)
 
-    def newStream(self, args):
+    def __newStream(self, args):
         """Creates new Shock stream.
 
         The stream will be registered in the sources dict.
@@ -113,7 +113,7 @@ class InterSCity(Handler):
         st = Stream(name)
         self.registerSource(args["stream"], st)
 
-    def handleIngestion(self, args):
+    def __handleIngestion(self, args):
         """Handle the new ingestion method of a stream.
 
         Args:
@@ -132,7 +132,7 @@ class InterSCity(Handler):
             raise Exception('Stream not found!')
 
 
-    def handleStore(self, args):
+    def __handleStore(self, args):
         warnings.warn('deprecated', DeprecationWarning)
         stream = self.sources.get(args["stream"])
         if (stream):
@@ -142,7 +142,7 @@ class InterSCity(Handler):
         else:
             raise Exception('Stream not found!')
 
-    def handleProcess(self, args):
+    def __handleProcess(self, args):
         """Handle the new process method of a stream.
 
         Args:
@@ -159,7 +159,7 @@ class InterSCity(Handler):
         else:
             raise Exception('Stream not found!')
 
-    def handlePublish(self, args):
+    def __handlePublish(self, args):
         """Handle the new publish method of a stream.
 
         Args:
@@ -176,7 +176,7 @@ class InterSCity(Handler):
         else:
             raise Exception('Stream not found!')
 
-    def flush(self):
+    def __flush(self):
         """Flushs pending actions. Used for sending websockets.
 
         Args:
@@ -188,7 +188,7 @@ class InterSCity(Handler):
         warnings.warn('deprecated', DeprecationWarning)
         flushAndServeWebsockets(self.spark)
 
-    def startStream(self, args):
+    def __startStream(self, args):
         """Starts a stream.
 
         Args:
@@ -199,6 +199,6 @@ class InterSCity(Handler):
         """
         stream = self.sources.get(args["stream"])
         if (stream):
-            stream.ingest()
+            stream.start()
         else:
             raise Exception('Stream not found!')

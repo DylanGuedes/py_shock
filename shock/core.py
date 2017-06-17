@@ -34,7 +34,7 @@ class Shock():
         >>> newStream;{"stream": "mynicestream"}
         >>> ingestion;{"stream": "mynicestream", "shock_action": "bestaction"}
         >>> store;{"stream": "mynicestream", "shock_action": "castentity"}
-        >>> publish;{"stream": "mynicestream", "shock_action": "parquetSink"} 
+        >>> publish;{"stream": "mynicestream", "shock_action": "parquetSink"}
     """
 
     def __init__(self, handler: Handler, environment="default") -> None:
