@@ -26,3 +26,9 @@ def test_wait_for_actions_called(WaitForActionsMock):
 def test_handle_messages_called_with_correct_args(THHandleMock):
     sck = shock.core.Shock(TestHandler)
     THHandleMock.assert_called_with('newstream', {})
+
+
+def test_get_module():
+    from shock.core import getClass
+    mod = getClass('shock.core', 'Shock')
+    assert mod == shock.core.Shock

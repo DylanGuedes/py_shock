@@ -75,6 +75,10 @@ class Handler(metaclass=ABCMeta):
 
 
 class InterSCity(Handler):
+    def __init__(self, opts: dict, environment="default") -> None:
+        warnings.warn('this module will be deprecated!', DeprecationWarning)
+        super().__init__()
+
     def setup(self):
         self.sc = SparkContext(appName="interscity")
         self.spark = SparkSession(self.sc)

@@ -1,13 +1,61 @@
-from typing import TypeVar
+from typing import TypeVar, Iterable
 from pyspark.sql import SparkSession
 import time
 from shock.processing import interscitySchema
 import asyncio
 import websockets
 import json
+from abc import ABCMeta, abstractmethod
 
 StructuredStream = TypeVar('StructuredStream')
 OutputStream = TypeVar('OutputStream')
+
+class Sink(metaclass=ABCMeta):
+    def __init__(self, opts: dict) -> None:
+        self.options = []
+        for u, v in opts:
+            self.options.append((u, v))
+
+    @abstractmethod
+    def requiredParams(self) -> Iterable:
+        pass
+
+    def __adjust(self) -> None:
+        if (not self.outputMode):
+            self.outputMode = 'append'
+        if (not self.format):
+            self.format = 'console'
+
+    def inject(self, stream: StructuredStream) -> OutputStream:
+        self.__adjust()
+        stream = stream.writeStream
+        stream = self.__outputMode(stream)
+        stream = self.__format(stream)
+        stream = self.__inject_options(stream)
+        stream = self.__start(stream)
+
+    def add_option(self, stream: StructuredStream, optionName: str,
+            optionValue: str) -> None:
+        self.options.append((optionName, optionValue))
+
+    def __outputMode(self, stream: StructuredStream) -> StructuredStream:
+        return stream.outputMode(self.outputMode)
+
+    def __format(self, stream: StructuredStream) -> StructuredStream:
+        return stream.format(self.format)
+
+    def __start(self, stream: StructuredStream) -> OutputStream:
+        return stream.start()
+
+    def __inject_options(self, stream: StructuredStream) -> StructuredStream:
+        for op in self.options:
+            stream = stream.option(op[0], op[1])
+        return stream
+
+
+class ConsoleSink(Sink):
+    def __init__(self, opts: dict) -> None:
+        pass
 
 def genericSink(stream: StructuredStream, sinkName: str, args: dict) -> OutputStream:
     """Return a output stream from a generic sink type.
@@ -19,9 +67,14 @@ def genericSink(stream: StructuredStream, sinkName: str, args: dict) -> OutputSt
     Returns:
         OutputStream: Stream output
     """
-    time.sleep(1)
-    streamName = args["stream"]
-    path = args["path"] or "/analysis"
+    streamName = args.get('stream')
+    if (not streamName):
+        raise('Invalid stream!')
+
+    path = args.get('path')
+    if (not path):
+        path = '/analysis'
+
     return stream.writeStream \
             .outputMode('append') \
             .format(sinkName) \
@@ -39,8 +92,7 @@ def consoleSink(stream: StructuredStream, args: dict) -> OutputStream:
     Returns:
         OutputStream: Stream output
     """
-    time.sleep(1)
-    streamName = args["stream"]
+    streamName = args.get("stream")
     return stream.writeStream \
             .outputMode('append') \
             .format('console') \

@@ -1,10 +1,16 @@
 import os
 import json
+import importlib
 
 from typing import Callable, TypeVar
 
 AnyFunction = Callable
 Handler = TypeVar('Handler')
+
+
+def getClass(modulePath: str, className: str):
+    mod = importlib.import_module(modulePath)
+    return getattr(mod, className)
 
 
 def getAction(fileName: str, actionName: str) -> AnyFunction:
