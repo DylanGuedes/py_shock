@@ -21,11 +21,12 @@ def genericSink(stream: StructuredStream, sinkName: str, args: dict) -> OutputSt
     """
     time.sleep(1)
     streamName = args["stream"]
+    path = args["path"] or "/analysis"
     return stream.writeStream \
             .outputMode('append') \
             .format(sinkName) \
-            .option("checkpointLocation", "/"+streamName) \
-            .option("path", "/analysis") \
+            .option("checkpointLocation", "/checkpoints/"+streamName) \
+            .option("path", path) \
             .start()
 
 
@@ -38,7 +39,12 @@ def consoleSink(stream: StructuredStream, args: dict) -> OutputStream:
     Returns:
         OutputStream: Stream output
     """
-    return genericSink(stream, "console", args)
+    time.sleep(1)
+    streamName = args["stream"]
+    return stream.writeStream \
+            .outputMode('append') \
+            .format('console') \
+            .start()
 
 
 def parquetSink(stream: StructuredStream, args: dict) -> OutputStream:
@@ -53,6 +59,35 @@ def parquetSink(stream: StructuredStream, args: dict) -> OutputStream:
     return genericSink(stream, "parquet", args)
 
 
+def parquetCompleteSink(stream: StructuredStream, args: dict) -> OutputStream:
+    """Write to ParquetSink using the complete output. The :path arg will be checked.
+
+    Args:
+        stream (StructuredStream): processed stream.
+
+    Returns:
+        OutputStream: Stream output
+    """
+    streamName = args.get("stream")
+    path = args.get("path") or "/analysis"
+    return stream.writeStream \
+            .outputMode('complete') \
+            .format('memory') \
+            .queryName('analysis') \
+            .start()
+
+
+def memorySink(stream: StructuredStream, args: dict) -> OutputStream:
+    table = args.get('table')
+    if not table:
+        table = 'analysis'
+    stream.writeStream\
+            .outputMode('complete')\
+            .format('memory')\
+            .queryName(table)\
+            .start()
+
+
 def jsonSink(stream: StructuredStream, args: dict) -> OutputStream:
     """Write stream output to json files. The content will be saved at /analysis
 
@@ -65,7 +100,7 @@ def jsonSink(stream: StructuredStream, args: dict) -> OutputStream:
     return genericSink(stream, "json", args)
 
 
-def flushAndServeWebsockets(spark: SparkSession) -> None:
+def flushAndServeWebsockets(args: dict) -> None:
     """Publish parquet results written in /analysis via websocket
 
     Args:
@@ -74,15 +109,28 @@ def flushAndServeWebsockets(spark: SparkSession) -> None:
     Returns:
         None
     """
+    spark = args.get("spark")
+    if (not spark):
+        raise('Spark Session should be passed!')
+
+    path = args.get("path")
+    if (not path):
+        path = "/analysis"
+
+    event = args.get("event")
+    if (not event):
+        event = "new_report"
+
     sch = interscitySchema()
     try:
-        df = spark.read.parquet("/analysis")
+        df = spark.read.parquet(path)
     except:
         df = spark.createDataFrame([], sch) # empty df
     rdd = df.rdd.collect()
 
     @asyncio.coroutine
     def sendPayload():
+        print('sending data...')
         websocket = yield from websockets.connect('ws://172.17.0.1:4545/socket/websocket')
         data = dict(topic="alerts:lobby", event="phx_join", payload={}, ref=None)
         yield from websocket.send(json.dumps(data))
@@ -93,6 +141,42 @@ def flushAndServeWebsockets(spark: SparkSession) -> None:
                 'timestamp': entry.timestamp,
                 'value': entry.value
             }
-            msg = dict(topic="alerts:lobby", event="new_report", payload=payload, ref=None)
+            msg = dict(topic="alerts:lobby", event=event, payload=payload, ref=None)
+            yield from websocket.send(json.dumps(msg))
+    asyncio.get_event_loop().run_until_complete(sendPayload())
+
+
+def queryAndServeWebsockets(args: dict) -> None:
+    spark = args.get("spark")
+    if (not spark):
+        raise('Spark Session should be passed!')
+
+    query = args.get("query")
+    if (not query):
+        raise('query should be passed!')
+
+    event = args.get("event")
+    if (not event):
+        event = "new_report"
+
+    try:
+        df = spark.sql(query)
+    except:
+        print("Wrong query...")
+        return
+
+    rdd = df.rdd.collect()
+
+    @asyncio.coroutine
+    def sendPayload():
+        print('sending data...')
+        websocket = yield from websockets.connect('ws://172.17.0.1:4545/socket/websocket')
+        data = dict(topic="alerts:lobby", event="phx_join", payload={}, ref=None)
+        yield from websocket.send(json.dumps(data))
+        for entry in rdd:
+            payload = {
+                'value': entry
+            }
+            msg = dict(topic="alerts:lobby", event=event, payload=payload, ref=None)
             yield from websocket.send(json.dumps(msg))
     asyncio.get_event_loop().run_until_complete(sendPayload())

@@ -69,13 +69,13 @@ class Shock():
         Returns:
             no return
         """
-        splittedMsg = msg.split(";")
         try:
+            splittedMsg = msg.split(";")
             actionName = splittedMsg[0].strip()
             args = json.loads(splittedMsg[1])
-            self.handler.handle(actionName, args)
         except:
-            print("Wrong action called!")
+            raise('Invalid action requested!')
+        self.handler.handle(actionName, args)
 
 
     def newActionSignal(self) -> None:

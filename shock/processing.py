@@ -7,6 +7,9 @@ import asyncio
 import websockets
 import json
 from typing import TypeVar
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
+
 
 def castentity(stream: DataStreamReader, args: dict) -> DataStreamReader:
     """Return a new dataframe with normalized attrs from `value`
@@ -16,7 +19,6 @@ def castentity(stream: DataStreamReader, args: dict) -> DataStreamReader:
 
     Returns:
         Stream: casted stream.
-
     """
     json_objects = []
     for u in ["uuid", "capability", "timestamp", "value"]:
@@ -34,11 +36,29 @@ def streamFilter(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
     Returns:
         SparkDataFrame: filtered stream.
     """
-    query = args["query"]
-    return stream.where(query)
+    query = args.get("query")
+    if (query):
+        return stream.where(query)
+    else:
+        raise('You should pass a query param!')
 
 
-def interscitySchema() -> SparkStructType:
+def mean(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
+    """Calculates mean of a column.
+
+    Args:
+        stream (SparkDataFrame): processed stream.
+        args (dict): options to be used in the filter.
+
+    Returns:
+        SparkDataFrame: filtered stream.
+    """
+    df1 = stream.selectExpr('cast(value as double) value', 'capability', 'uuid', 'timestamp')
+    df2 = df1.select(avg("value"))
+    return df2
+
+
+def interscitySchema(valueType=str) -> SparkStructType:
     """Capabilities schema used in InterSCity.
 
     Args:
@@ -51,4 +71,4 @@ def interscitySchema() -> SparkStructType:
             .add("uuid", "string") \
             .add("capability", "string") \
             .add("timestamp", "string") \
-            .add("value", "string")
+            .add("value", valueType)

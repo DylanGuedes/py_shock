@@ -94,7 +94,7 @@ class InterSCity(Handler):
         elif (actionName == "newStream"):
             self.__newStream(args)
         elif (actionName == "flush"):
-            self.__flush()
+            self.__flush(args)
         elif (actionName == "start"):
             self.__startStream(args)
 
@@ -176,7 +176,7 @@ class InterSCity(Handler):
         else:
             raise Exception('Stream not found!')
 
-    def __flush(self):
+    def __flush(self, args):
         """Flushs pending actions. Used for sending websockets.
 
         Args:
@@ -186,7 +186,19 @@ class InterSCity(Handler):
             no return.
         """
         warnings.warn('deprecated', DeprecationWarning)
-        flushAndServeWebsockets(self.spark)
+        args["spark"] = self.spark
+        strategy = args.get("strategy")
+        if (not strategy):
+            strategy = "flushAndServeWebsockets"
+        try:
+            fn = getAction("sinks", strategy)
+        except:
+            raise('Invalid flush strategy!')
+
+        try:
+            fn(args)
+        except:
+            print("Incorrect flush...")
 
     def __startStream(self, args):
         """Starts a stream.

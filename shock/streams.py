@@ -27,44 +27,23 @@ class Stream():
         self.__ingest()
 
     def __ingest(self):
-        """
-        =============================================
-        | **ingest** => store => analyze => publish |
-        =============================================
-        """
         print("ingesting...")
         self.state = self.ingestAction(self.ingestArgs)
-        self.initialState = self.state
-        self.store()
+        self.__store()
 
     def __store(self):
-        """
-        =============================================
-        | ingest => **store** => analyze => publish |
-        =============================================
-        """
         print("storing...")
         if (self.storeAction):
             self.state = self.storeAction(self.state, self.storeArgs)
-        self.analyze()
+        self.__analyze()
 
     def __analyze(self):
-        """
-        =============================================
-        | ingest => store => **analyze** => publish |
-        =============================================
-        """
         print("analyzing...")
-        if (self.processArgs):
-            self.processAction(self.state, self.processArgs)
-        self.publish()
+        if (self.processAction):
+            self.state = self.processAction(self.state, self.processArgs)
+        self.__publish()
 
     def __publish(self):
-        """
-        =============================================
-        | ingest => store => analyze => **publish** |
-        =============================================
-        """
         print("publishing...")
         if (self.publishAction):
             self.state = self.publishAction(self.state, self.publishArgs)
