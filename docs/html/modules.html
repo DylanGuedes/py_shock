@@ -1,0 +1,649 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>SHOCK modules docs &mdash; shock 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="author" title="About these documents"
+              href="about.html"/>
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="shock 0.1 documentation" href="index.html"/>
+        <link rel="next" title="About" href="about.html"/>
+        <link rel="prev" title="SHOCK" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> shock
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#shock-core-docs">shock.core docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shock-handlers-docs">shock.handlers docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shock-streams-docs">shock.streams docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shock-sinks-docs">shock.sinks docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shock-ingestion-docs">shock.ingestion docs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shock-processing-docs">shock.processing docs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">shock</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>SHOCK modules docs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/modules.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="shock-modules-docs">
+<h1>SHOCK modules docs<a class="headerlink" href="#shock-modules-docs" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="shock-core-docs">
+<h2>shock.core docs<a class="headerlink" href="#shock-core-docs" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="shock.core.Shock">
+<em class="property">class </em><code class="descclassname">shock.core.</code><code class="descname">Shock</code><span class="sig-paren">(</span><em>handler: Handler</em>, <em>environment='default'</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/shock/core.html#Shock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.core.Shock" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class serves as an abstraction for the communication between Spark
+and Kafka</p>
+<dl class="docutils">
+<dt>Examples (py):</dt>
+<dd><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">shock</span> <span class="o">=</span> <span class="n">Shock</span><span class="p">(</span><span class="n">InterSCity</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+<dt>Examples (kafka-consumer):</dt>
+<dd><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">newStream</span><span class="p">;{</span><span class="s2">&quot;stream&quot;</span><span class="p">:</span> <span class="s2">&quot;mynicestream&quot;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ingestion</span><span class="p">;{</span><span class="s2">&quot;stream&quot;</span><span class="p">:</span> <span class="s2">&quot;mynicestream&quot;</span><span class="p">,</span> <span class="s2">&quot;shock_action&quot;</span><span class="p">:</span> <span class="s2">&quot;bestaction&quot;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">store</span><span class="p">;{</span><span class="s2">&quot;stream&quot;</span><span class="p">:</span> <span class="s2">&quot;mynicestream&quot;</span><span class="p">,</span> <span class="s2">&quot;shock_action&quot;</span><span class="p">:</span> <span class="s2">&quot;castentity&quot;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">publish</span><span class="p">;{</span><span class="s2">&quot;stream&quot;</span><span class="p">:</span> <span class="s2">&quot;mynicestream&quot;</span><span class="p">,</span> <span class="s2">&quot;shock_action&quot;</span><span class="p">:</span> <span class="s2">&quot;parquetSink&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="method">
+<dt id="shock.core.Shock.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>handler: Handler</em>, <em>environment='default'</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/shock/core.html#Shock.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.core.Shock.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shock constructor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>handler</strong> (<a class="reference internal" href="#shock.handlers.Handler" title="shock.handlers.Handler"><em>Handler</em></a>) &#8211; A Shock handler to be used.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sck</span> <span class="o">=</span> <span class="n">Shock</span><span class="p">(</span><span class="n">InterSCity</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="shock.core.Shock.handleNewKafkaMsg">
+<code class="descname">handleNewKafkaMsg</code><span class="sig-paren">(</span><em>msg: str</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/shock/core.html#Shock.handleNewKafkaMsg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.core.Shock.handleNewKafkaMsg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalize Kafka message and send to be handled by the handler</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; msg received, with at least one <cite>;</cite> char</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">no return</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="shock.core.Shock.newActionSignal">
+<code class="descname">newActionSignal</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/shock/core.html#Shock.newActionSignal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.core.Shock.newActionSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alert handler about new action arrived.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arguments</strong> (<em>no</em>) &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">no return</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="shock.core.Shock.waitForActions">
+<code class="descname">waitForActions</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/shock/core.html#Shock.waitForActions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.core.Shock.waitForActions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Consume Kafka&#8217;s msg</p>
+<dl class="docutils">
+<dt>Expected Data:</dt>
+<dd>&#8220;actionname ;  {&#8220;key1&#8221;: &#8220;val1&#8221;, &#8220;key2&#8221;: &#8220;val2&#8221;, &#8220;keyn&#8221;: &#8220;valn&#8221;}&#8221;</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="shock.core.getAction">
+<code class="descclassname">shock.core.</code><code class="descname">getAction</code><span class="sig-paren">(</span><em>fileName: str</em>, <em>actionName: str</em><span class="sig-paren">)</span> &#x2192; typing.Callable<a class="reference internal" href="_modules/shock/core.html#getAction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.core.getAction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load action from file inside shock folder</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>fileName</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; file that has the action.</li>
+<li><strong>actionName</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; action that will be extracted from file.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the call result.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">action</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="shock-handlers-docs">
+<h2>shock.handlers docs<a class="headerlink" href="#shock-handlers-docs" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="shock.handlers.Handler">
+<em class="property">class </em><code class="descclassname">shock.handlers.</code><code class="descname">Handler</code><span class="sig-paren">(</span><em>opts: dict</em>, <em>environment='default'</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/shock/handlers.html#Handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.handlers.Handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handler that will be used to take care of new Kafka messages.</p>
+<p>The handler needs to override the <cite>handle</cite> method.</p>
+<dl class="method">
+<dt id="shock.handlers.Handler.handle">
+<code class="descname">handle</code><span class="sig-paren">(</span><em>actionName: str</em>, <em>args: dict</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/shock/handlers.html#Handler.handle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.handlers.Handler.handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook that handles a given Kafka&#8217;s message.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>actionName</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Name of the action called.</li>
+<li><strong>args</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Arguments that the action are using.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">no return.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="shock.handlers.Handler.newActionSignal">
+<code class="descname">newActionSignal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/shock/handlers.html#Handler.newActionSignal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.handlers.Handler.newActionSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook that will be executed when new Kafka&#8217;s message arrive.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="shock.handlers.Handler.registerSource">
+<code class="descname">registerSource</code><span class="sig-paren">(</span><em>sourceName: str</em>, <em>source</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/shock/handlers.html#Handler.registerSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.handlers.Handler.registerSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a source type (can be a string).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sourceName</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Name of the source that will be added.</li>
+<li><strong>source</strong> (<em>class</em>) &#8211; Instance of the source that will be added.
+Can be a Stream.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">no return</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="shock.handlers.Handler.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/shock/handlers.html#Handler.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.handlers.Handler.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setups the handler.</p>
+<p>It will be called in the instantiation, and should be overridden when
+needed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arguments.</strong> (<em>no</em>) &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">no return.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="shock.handlers.InterSCity">
+<em class="property">class </em><code class="descclassname">shock.handlers.</code><code class="descname">InterSCity</code><span class="sig-paren">(</span><em>opts: dict</em>, <em>environment='default'</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/shock/handlers.html#InterSCity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.handlers.InterSCity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="shock-streams-docs">
+<h2>shock.streams docs<a class="headerlink" href="#shock-streams-docs" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="shock.streams.Stream">
+<em class="property">class </em><code class="descclassname">shock.streams.</code><code class="descname">Stream</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/shock/streams.html#Stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.streams.Stream" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">actions</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;publish&#39;</span><span class="p">:</span> <span class="n">publishAction</span><span class="p">,</span> <span class="s1">&#39;store&#39;</span><span class="p">:</span> <span class="n">storeAction</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">st</span> <span class="o">=</span> <span class="n">Stream</span><span class="p">(</span><span class="n">ingest</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;broker&#39;</span><span class="p">:</span> <span class="s1">&#39;kafka:9092&#39;</span><span class="p">},</span> <span class="n">actions</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">st</span><span class="o">.</span><span class="n">ingest</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="shock-sinks-docs">
+<h2>shock.sinks docs<a class="headerlink" href="#shock-sinks-docs" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="shock.sinks.genericSink">
+<code class="descclassname">shock.sinks.</code><code class="descname">genericSink</code><span class="sig-paren">(</span><em>stream: StructuredStream</em>, <em>sinkName: str</em>, <em>args: dict</em><span class="sig-paren">)</span> &#x2192; OutputStream<a class="reference internal" href="_modules/shock/sinks.html#genericSink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.sinks.genericSink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a output stream from a generic sink type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stream</strong> (<em>StructuredStream</em>) &#8211; processed stream.</li>
+<li><strong>sinkName</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Sink type.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Stream output</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">OutputStream</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="shock.sinks.consoleSink">
+<code class="descclassname">shock.sinks.</code><code class="descname">consoleSink</code><span class="sig-paren">(</span><em>stream: StructuredStream</em>, <em>args: dict</em><span class="sig-paren">)</span> &#x2192; OutputStream<a class="reference internal" href="_modules/shock/sinks.html#consoleSink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.sinks.consoleSink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints stream output to terminal.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stream</strong> (<em>StructuredStream</em>) &#8211; processed stream.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Stream output</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">OutputStream</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="shock.sinks.parquetSink">
+<code class="descclassname">shock.sinks.</code><code class="descname">parquetSink</code><span class="sig-paren">(</span><em>stream: StructuredStream</em>, <em>args: dict</em><span class="sig-paren">)</span> &#x2192; OutputStream<a class="reference internal" href="_modules/shock/sinks.html#parquetSink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.sinks.parquetSink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write stream output to Parquet files. The content will be saved at /analysis</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stream</strong> (<em>StructuredStream</em>) &#8211; processed stream.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Stream output</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">OutputStream</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="shock.sinks.jsonSink">
+<code class="descclassname">shock.sinks.</code><code class="descname">jsonSink</code><span class="sig-paren">(</span><em>stream: StructuredStream</em>, <em>args: dict</em><span class="sig-paren">)</span> &#x2192; OutputStream<a class="reference internal" href="_modules/shock/sinks.html#jsonSink"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.sinks.jsonSink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write stream output to json files. The content will be saved at /analysis</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stream</strong> (<em>StructuredStream</em>) &#8211; processed stream.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Stream output</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">OutputStream</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="shock.sinks.flushAndServeWebsockets">
+<code class="descclassname">shock.sinks.</code><code class="descname">flushAndServeWebsockets</code><span class="sig-paren">(</span><em>args: dict</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/shock/sinks.html#flushAndServeWebsockets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.sinks.flushAndServeWebsockets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Publish parquet results written in /analysis via websocket</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>spark</strong> (<em>SparkSession</em>) &#8211; processed stream.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="shock-ingestion-docs">
+<h2>shock.ingestion docs<a class="headerlink" href="#shock-ingestion-docs" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="shock.ingestion.socketIngestion">
+<code class="descclassname">shock.ingestion.</code><code class="descname">socketIngestion</code><span class="sig-paren">(</span><em>args: dict</em><span class="sig-paren">)</span> &#x2192; sphinx.ext.autodoc.DataFrame<a class="reference internal" href="_modules/shock/ingestion.html#socketIngestion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.ingestion.socketIngestion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a socket ingestion stream ready to be used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; dict with options used to mount the stream.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">socket ingestion dataframe ready to be used.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">SparkDataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="shock.ingestion.kafkaIngestion">
+<code class="descclassname">shock.ingestion.</code><code class="descname">kafkaIngestion</code><span class="sig-paren">(</span><em>args: dict</em><span class="sig-paren">)</span> &#x2192; sphinx.ext.autodoc.DataFrame<a class="reference internal" href="_modules/shock/ingestion.html#kafkaIngestion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.ingestion.kafkaIngestion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a kafka ingestion stream ready to be used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; dict with options used to mount the stream.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">kafka ingestion dataframe ready to be used.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">SparkDataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="shock-processing-docs">
+<h2>shock.processing docs<a class="headerlink" href="#shock-processing-docs" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="shock.processing.castentity">
+<code class="descclassname">shock.processing.</code><code class="descname">castentity</code><span class="sig-paren">(</span><em>stream: sphinx.ext.autodoc.DataStreamReader</em>, <em>args: dict</em><span class="sig-paren">)</span> &#x2192; sphinx.ext.autodoc.DataStreamReader<a class="reference internal" href="_modules/shock/processing.html#castentity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.processing.castentity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new dataframe with normalized attrs from <cite>value</cite></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stream</strong> (<a class="reference internal" href="#shock.streams.Stream" title="shock.streams.Stream"><em>Stream</em></a>) &#8211; processed stream.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">casted stream.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#shock.streams.Stream" title="shock.streams.Stream">Stream</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="shock.processing.streamFilter">
+<code class="descclassname">shock.processing.</code><code class="descname">streamFilter</code><span class="sig-paren">(</span><em>stream: sphinx.ext.autodoc.DataFrame</em>, <em>args: dict</em><span class="sig-paren">)</span> &#x2192; sphinx.ext.autodoc.DataFrame<a class="reference internal" href="_modules/shock/processing.html#streamFilter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.processing.streamFilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>stream</strong> (<em>SparkDataFrame</em>) &#8211; processed stream.</li>
+<li><strong>args</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; options to be used in the filter.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">filtered stream.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">SparkDataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="shock.processing.interscitySchema">
+<code class="descclassname">shock.processing.</code><code class="descname">interscitySchema</code><span class="sig-paren">(</span><em>valueType='string'</em><span class="sig-paren">)</span> &#x2192; sphinx.ext.autodoc.StructType<a class="reference internal" href="_modules/shock/processing.html#interscitySchema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#shock.processing.interscitySchema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Capabilities schema used in InterSCity.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nope</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the schema used in InterSCity capabilities system.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">SparkStructType</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="about.html" class="btn btn-neutral float-right" title="About" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="SHOCK" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Dylan Guedes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

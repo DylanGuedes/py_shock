@@ -1,0 +1,442 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>shock.handlers &mdash; shock 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="author" title="About these documents"
+              href="../../about.html"/>
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="shock 0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> shock
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">shock</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>shock.handlers</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for shock.handlers</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">heapq</span> <span class="k">import</span> <span class="n">heappush</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">kafka</span> <span class="k">import</span> <span class="n">KafkaConsumer</span><span class="p">,</span> <span class="n">KafkaProducer</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span>
+
+<span class="kn">from</span> <span class="nn">pyspark</span> <span class="k">import</span> <span class="n">SparkContext</span><span class="p">,</span> <span class="n">SparkConf</span>
+<span class="kn">from</span> <span class="nn">pyspark.streaming.kafka</span> <span class="k">import</span> <span class="n">KafkaUtils</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="k">import</span> <span class="n">SparkSession</span>
+<span class="kn">from</span> <span class="nn">pyspark.streaming</span> <span class="k">import</span> <span class="n">StreamingContext</span>
+<span class="kn">from</span> <span class="nn">shock.core</span> <span class="k">import</span> <span class="n">getAction</span>
+<span class="kn">from</span> <span class="nn">shock.streams</span> <span class="k">import</span> <span class="n">Stream</span>
+<span class="kn">from</span> <span class="nn">shock.sinks</span> <span class="k">import</span> <span class="n">flushAndServeWebsockets</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+
+<div class="viewcode-block" id="Handler"><a class="viewcode-back" href="../../modules.html#shock.handlers.Handler">[docs]</a><span class="k">class</span> <span class="nc">Handler</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handler that will be used to take care of new Kafka messages.</span>
+
+<span class="sd">    The handler needs to override the `handle` method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">environment</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sources</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">opts</span> <span class="o">=</span> <span class="n">opts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Handler.registerSource"><a class="viewcode-back" href="../../modules.html#shock.handlers.Handler.registerSource">[docs]</a>    <span class="k">def</span> <span class="nf">registerSource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sourceName</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register a source type (can be a string).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            sourceName (str): Name of the source that will be added.</span>
+<span class="sd">            source (class): Instance of the source that will be added.</span>
+<span class="sd">                Can be a Stream.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            no return</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="n">sourceName</span><span class="p">]</span> <span class="o">=</span> <span class="n">source</span></div>
+
+<div class="viewcode-block" id="Handler.setup"><a class="viewcode-back" href="../../modules.html#shock.handlers.Handler.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setups the handler.</span>
+<span class="sd">        </span>
+<span class="sd">        It will be called in the instantiation, and should be overridden when</span>
+<span class="sd">        needed.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            no arguments.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            no return.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Handler.handle"><a class="viewcode-back" href="../../modules.html#shock.handlers.Handler.handle">[docs]</a>    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actionName</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Hook that handles a given Kafka&#39;s message.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            actionName (str): Name of the action called.</span>
+<span class="sd">            args (dict): Arguments that the action are using.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            no return.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Handler.newActionSignal"><a class="viewcode-back" href="../../modules.html#shock.handlers.Handler.newActionSignal">[docs]</a>    <span class="k">def</span> <span class="nf">newActionSignal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Hook that will be executed when new Kafka&#39;s message arrive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="InterSCity"><a class="viewcode-back" href="../../modules.html#shock.handlers.InterSCity">[docs]</a><span class="k">class</span> <span class="nc">InterSCity</span><span class="p">(</span><span class="n">Handler</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">environment</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;this module will be deprecated!&#39;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span><span class="n">appName</span><span class="o">=</span><span class="s2">&quot;interscity&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sc</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">consumer</span> <span class="o">=</span> <span class="n">KafkaConsumer</span><span class="p">(</span><span class="n">bootstrap_servers</span><span class="o">=</span><span class="s2">&quot;kafka:9092&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">consumer</span><span class="o">.</span><span class="n">subscribe</span><span class="p">([</span><span class="s1">&#39;new_pipeline_instruction&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actionName</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Handling action &quot;</span><span class="p">,</span> <span class="n">actionName</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">actionName</span> <span class="o">==</span> <span class="s2">&quot;ingestion&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__handleIngestion</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">actionName</span> <span class="o">==</span> <span class="s2">&quot;store&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__handleStore</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">actionName</span> <span class="o">==</span> <span class="s2">&quot;process&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__handleProcess</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">actionName</span> <span class="o">==</span> <span class="s2">&quot;publish&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__handlePublish</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">actionName</span> <span class="o">==</span> <span class="s2">&quot;newStream&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__newStream</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">actionName</span> <span class="o">==</span> <span class="s2">&quot;flush&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__flush</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">actionName</span> <span class="o">==</span> <span class="s2">&quot;start&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__startStream</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__newStream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates new Shock stream.</span>
+
+<span class="sd">        The stream will be registered in the sources dict.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            args (dict): Arguments used for the registration.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            no return.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;stream&quot;</span><span class="p">]</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">Stream</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">registerSource</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;stream&quot;</span><span class="p">],</span> <span class="n">st</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__handleIngestion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handle the new ingestion method of a stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            args (dict): Arguments used for the ingestion.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            no return.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;stream&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">stream</span><span class="p">):</span>
+            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;spark&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">getAction</span><span class="p">(</span><span class="s2">&quot;ingestion&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;shock_action&quot;</span><span class="p">])</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">ingestAction</span> <span class="o">=</span> <span class="n">fn</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">ingestArgs</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Stream not found!&#39;</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">__handleStore</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;deprecated&#39;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;stream&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">stream</span><span class="p">):</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">getAction</span><span class="p">(</span><span class="s2">&quot;processing&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;shock_action&quot;</span><span class="p">])</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">storeAction</span> <span class="o">=</span> <span class="n">fn</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">storeArgs</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Stream not found!&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__handleProcess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handle the new process method of a stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            args (dict): Arguments used for the processing.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            no return.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;stream&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">stream</span><span class="p">):</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">getAction</span><span class="p">(</span><span class="s2">&quot;processing&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;shock_action&quot;</span><span class="p">])</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">processAction</span> <span class="o">=</span> <span class="n">fn</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">processArgs</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Stream not found!&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__handlePublish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Handle the new publish method of a stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            args (dict): Arguments used for the publish.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            no return.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;stream&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">stream</span><span class="p">):</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">getAction</span><span class="p">(</span><span class="s2">&quot;sinks&quot;</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;shock_action&quot;</span><span class="p">])</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">publishAction</span> <span class="o">=</span> <span class="n">fn</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">publishArgs</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Stream not found!&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__flush</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Flushs pending actions. Used for sending websockets.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            no arguments.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            no return.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;deprecated&#39;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="n">args</span><span class="p">[</span><span class="s2">&quot;spark&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span>
+        <span class="n">strategy</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;strategy&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">strategy</span><span class="p">):</span>
+            <span class="n">strategy</span> <span class="o">=</span> <span class="s2">&quot;flushAndServeWebsockets&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">getAction</span><span class="p">(</span><span class="s2">&quot;sinks&quot;</span><span class="p">,</span> <span class="n">strategy</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="s1">&#39;Invalid flush strategy!&#39;</span><span class="p">)</span>
+
+        <span class="n">fn</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__startStream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Starts a stream.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            args (dict): Arguments used to start the stream.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            no return.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s2">&quot;stream&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">stream</span><span class="p">):</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Stream not found!&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Dylan Guedes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

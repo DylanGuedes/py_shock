@@ -1,0 +1,311 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>shock.ingestion &mdash; shock 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="author" title="About these documents"
+              href="../../about.html"/>
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="shock 0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> shock
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">shock</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>shock.ingestion</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for shock.ingestion</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="k">import</span> <span class="n">DataFrame</span> <span class="k">as</span> <span class="n">SparkDataFrame</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql.types</span> <span class="k">import</span> <span class="n">StructType</span>
+
+
+<div class="viewcode-block" id="socketIngestion"><a class="viewcode-back" href="../../modules.html#shock.ingestion.socketIngestion">[docs]</a><span class="k">def</span> <span class="nf">socketIngestion</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparkDataFrame</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Return a socket ingestion stream ready to be used.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        args (dict): dict with options used to mount the stream.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        SparkDataFrame: socket ingestion dataframe ready to be used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">spark</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;spark&quot;</span><span class="p">]</span>
+    <span class="n">host</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;host&quot;</span><span class="p">]</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">spark</span><span class="o">.</span><span class="n">readStream</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;socket&quot;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;host&quot;</span><span class="p">,</span> <span class="n">host</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;port&quot;</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">load</span><span class="p">()</span></div>
+
+
+<span class="k">def</span> <span class="nf">parquetValueIngestion</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparkDataFrame</span><span class="p">:</span>
+    <span class="n">spark</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;spark&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spark</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">)</span>
+
+        <span class="n">mySchema</span> <span class="o">=</span> <span class="n">StructType</span><span class="p">()</span> \
+                <span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;string&quot;</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span> <span class="s2">&quot;string&quot;</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;timestamp&quot;</span><span class="p">,</span> <span class="s2">&quot;string&quot;</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;capability&quot;</span><span class="p">,</span> <span class="s2">&quot;string&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">stream</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">readStream</span> \
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">schema</span><span class="p">(</span><span class="n">mySchema</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">load</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">stream</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="s2">&quot;You should pass a path to be readed!&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span><span class="p">(</span><span class="s2">&quot;You should pass a spark session instance!&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">parquetIngestion</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparkDataFrame</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Return a Parquet File ingestion stream ready to be used.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        args (dict): dict with options used to mount the stream.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        SparkDataFrame: Parquet ingestion dataframe ready to be used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">spark</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;spark&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spark</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">spark</span><span class="o">.</span><span class="n">readStream</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;parquet&quot;</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">load</span><span class="p">()</span> \
+                <span class="o">.</span><span class="n">selectExpr</span><span class="p">(</span><span class="s2">&quot;CAST(key AS STRING)&quot;</span><span class="p">,</span> <span class="s2">&quot;CAST(value AS STRING)&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="s2">&quot;You should pass a path to be readed!&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span><span class="p">(</span><span class="s2">&quot;You should pass a spark session instance!&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="kafkaIngestion"><a class="viewcode-back" href="../../modules.html#shock.ingestion.kafkaIngestion">[docs]</a><span class="k">def</span> <span class="nf">kafkaIngestion</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SparkDataFrame</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Return a kafka ingestion stream ready to be used.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        args (dict): dict with options used to mount the stream.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        SparkDataFrame: kafka ingestion dataframe ready to be used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">spark</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;spark&quot;</span><span class="p">]</span> <span class="c1"># TODO: raise exception if no param</span>
+    <span class="n">topic</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;topic&quot;</span><span class="p">]</span> <span class="c1"># TODO: raise exception if no param</span>
+    <span class="n">brokers</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">&quot;brokers&quot;</span><span class="p">]</span> <span class="c1"># TODO: raise exception if no param</span>
+    <span class="k">return</span> <span class="n">spark</span><span class="o">.</span><span class="n">readStream</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;kafka&quot;</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;kafka.bootstrap.servers&quot;</span><span class="p">,</span> <span class="n">brokers</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;subscribe&quot;</span><span class="p">,</span> <span class="n">topic</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">load</span><span class="p">()</span> \
+        <span class="o">.</span><span class="n">selectExpr</span><span class="p">(</span><span class="s2">&quot;CAST(key AS STRING)&quot;</span><span class="p">,</span> <span class="s2">&quot;CAST(value AS STRING)&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Dylan Guedes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
