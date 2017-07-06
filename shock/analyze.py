@@ -11,21 +11,6 @@ from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
 
-def castentity(stream: DataStreamReader, args: dict) -> DataStreamReader:
-    """Return a new dataframe with normalized attrs from `value`
-
-    Args:
-        stream (Stream): processed stream.
-
-    Returns:
-        Stream: casted stream.
-    """
-    json_objects = []
-    for u in ["uuid", "capability", "timestamp", "value"]:
-        json_objects.append(get_json_object(stream.value, '$.'+u).alias(u))
-    return stream.select(json_objects)
-
-
 def streamFilter(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
     """Filter stream.
 
@@ -58,7 +43,7 @@ def mean(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
     return df2
 
 
-def interscitySchema(valueType=str) -> SparkStructType:
+def interscitySchema(valueType="string") -> SparkStructType:
     """Capabilities schema used in InterSCity.
 
     Args:

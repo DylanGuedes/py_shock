@@ -37,7 +37,6 @@ def parquetValueIngestion(args: dict) -> SparkDataFrame:
                 .schema(mySchema) \
                 .option("path", path) \
                 .load()
-            stream.writeStream.format('console').outputMode('append').start()
             return stream
         else:
             raise("You should pass a path to be readed!")
