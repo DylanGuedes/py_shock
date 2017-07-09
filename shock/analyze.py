@@ -9,6 +9,7 @@ import json
 from typing import TypeVar
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
+from shock.sinks import getRequiredParam
 
 
 def streamFilter(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
@@ -21,11 +22,8 @@ def streamFilter(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
     Returns:
         SparkDataFrame: filtered stream.
     """
-    query = args.get("query")
-    if (query):
-        return stream.where(query)
-    else:
-        raise('You should pass a query param!')
+    query = getRequiredParam(args, 'query')
+    return stream.where(query)
 
 
 def mean(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
@@ -38,7 +36,7 @@ def mean(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
     Returns:
         SparkDataFrame: filtered stream.
     """
-    df1 = stream.selectExpr('cast(value as double) value', 'capability', 'uuid', 'timestamp')
+    df1 = stream.selectExpr('cast(value as double) value')
     df2 = df1.select(avg("value"))
     return df2
 

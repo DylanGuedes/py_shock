@@ -92,14 +92,22 @@ def consoleSink(stream: StructuredStream, args: dict) -> OutputStream:
 
 def _fileSink(sinkName: str, stream: StructuredStream, args: dict) -> OutputStream:
     streamName = getRequiredParam(args, 'stream')
-    path = args.get('path') or '/analysis'
+    path = args.get('path') or 'analysis'
     outputMode = args.get('outputMode') or 'append'
     return stream.writeStream \
-            .outputMode(outputMode) \
-            .option('checkpointLocation', '/checkpoints/'+streamName) \
-            .option('path', path) \
             .format(sinkName) \
+            .outputMode(outputMode) \
+            .option('checkpointLocation', 'checkpoints/'+streamName) \
+            .option('path', path) \
             .start()
+
+
+def consoleSink(stream: StructuredStream, args: dict) -> OutputStream:
+    stream =  stream.writeStream \
+            .format('console')\
+            .start()
+    return stream
+
 
 def parquetSink(stream: StructuredStream, args: dict) -> OutputStream:
     """Write stream output to Parquet files. The content will be saved at /analysis
@@ -136,10 +144,8 @@ def memorySink(stream: StructuredStream, args: dict) -> OutputStream:
         OutputStream: Stream output
     """
     table = getRequiredParam(args, 'table')
-    stream.writeStream\
+    return stream.writeStream\
             .outputMode('complete')\
             .format('memory')\
             .queryName(table)\
             .start()
-
-

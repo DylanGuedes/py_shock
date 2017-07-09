@@ -58,9 +58,9 @@ def readAndServeWebsockets(args: dict) -> None:
         df = spark.read.parquet(path)
     except:
         df = spark.createDataFrame([], sch) # empty df
-        print('Empty path %s' % path)
         return
     rdd = df.rdd.collect()
+
 
     @asyncio.coroutine
     def sendPayload():

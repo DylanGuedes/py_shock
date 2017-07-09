@@ -81,8 +81,9 @@ class InterSCity(Handler):
 
     def setup(self):
         self.sc = SparkContext(appName="interscity")
+        self.sc.setLogLevel("WARN")
         self.spark = SparkSession(self.sc)
-        self.consumer = KafkaConsumer(bootstrap_servers="kafka:9092")
+        self.consumer = KafkaConsumer(bootstrap_servers="localhost:9092")
         self.consumer.subscribe(['new_pipeline_instruction'])
 
     def handle(self, actionName, args):
@@ -131,12 +132,11 @@ class InterSCity(Handler):
         shockAction = getRequiredParam(args, 'shock_action')
         if (stream):
             args["spark"] = self.spark
-            fn = getAction("ingestion", shockAction)
+            fn = getAction('ingestion', shockAction)
             stream.ingestAction = fn
             stream.ingestArgs = args
         else:
             raise Exception('Stream not found!')
-
 
     def __handleSetup(self, args):
         warnings.warn('deprecated', DeprecationWarning)

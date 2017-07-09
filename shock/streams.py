@@ -26,7 +26,8 @@ class Stream():
         self.__ingest()
 
     def __ingest(self):
-        self.state = self.ingestAction(self.ingestArgs)
+        if (self.ingestAction):
+            self.state = self.ingestAction(self.ingestArgs)
         self.__setup()
 
     def __setup(self):
