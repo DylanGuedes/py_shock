@@ -1,4 +1,4 @@
-from typing import TypeVar, Iterable
+from typing import TypeVar, Iterable, Any
 from pyspark.sql import SparkSession
 import time
 from shock.analyze import interscitySchema
@@ -6,6 +6,7 @@ import asyncio
 import websockets
 import json
 from abc import ABCMeta, abstractmethod
+from pyspark.sql.streaming import DataStreamWriter
 
 StructuredStream = TypeVar('StructuredStream')
 OutputStream = TypeVar('OutputStream')
@@ -67,7 +68,7 @@ class RequiredParamMissing(Exception):
         return 'Missing required param %s.' % self.param
 
 
-def getRequiredParam(args: dict, paramName: str) -> str:
+def getRequiredParam(args: dict, paramName: str) -> Any:
     param = args.get(paramName)
     if (param):
         return param
@@ -100,13 +101,6 @@ def _fileSink(sinkName: str, stream: StructuredStream, args: dict) -> OutputStre
             .option('checkpointLocation', 'checkpoints/'+streamName) \
             .option('path', path) \
             .start()
-
-
-def consoleSink(stream: StructuredStream, args: dict) -> OutputStream:
-    stream =  stream.writeStream \
-            .format('console')\
-            .start()
-    return stream
 
 
 def parquetSink(stream: StructuredStream, args: dict) -> OutputStream:

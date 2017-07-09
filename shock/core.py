@@ -13,7 +13,7 @@ def getClass(modulePath: str, className: str):
     return getattr(mod, className)
 
 
-def getAction(fileName: str, actionName: str) -> AnyFunction:
+def getAction(fileName: str, actionName: str) -> Callable:
     """Load action from file inside shock folder
 
     Args:
@@ -27,6 +27,14 @@ def getAction(fileName: str, actionName: str) -> AnyFunction:
     module = __import__(modulefullpath)
     action = getattr(module, fileName)
     return getattr(action, actionName)
+
+
+class InvalidAction(Exception):
+    def __init__(self, action: str) -> None:
+        self.action = action
+
+    def __str__(self):
+        return 'Invalid action %s requested.' % self.action
 
 
 class Shock():
@@ -79,7 +87,7 @@ class Shock():
             actionName = splittedMsg[0].strip()
             args = json.loads(splittedMsg[1])
         except:
-            raise('Invalid action %s requested!', msg)
+            raise InvalidAction(msg)
         self.handler.handle(actionName, args)
 
 

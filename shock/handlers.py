@@ -1,3 +1,10 @@
+try:
+    from pyspark import SparkContext, SparkConf
+except:
+    import findspark
+    findspark.init()
+    from pyspark import SparkContext, SparkConf
+
 from heapq import heappush
 from abc import ABCMeta, abstractmethod
 from kafka import KafkaConsumer, KafkaProducer

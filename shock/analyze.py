@@ -1,3 +1,8 @@
+try:
+    import pyspark
+except:
+    import findspark
+    findspark.init()
 from pyspark.sql.types import StructType as SparkStructType
 from pyspark.sql.functions import *
 from pyspark.sql.streaming import DataStreamWriter, DataStreamReader
