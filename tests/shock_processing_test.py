@@ -30,7 +30,8 @@ def sqlcontext():
 
 
 def testFilter(sc, spark):
-    from shock.processing import streamFilter, castentity
+    from shock.analyze import streamFilter
+    from shock.setup import kafkaCast
     jsonString1 = '{"uuid": "aaaa", "capability": "temperature",\
                    "timestamp": "today", "value": 15}'
     jsonString2 = '{"uuid": "bbbb", "capability": "temperature",\
@@ -45,7 +46,7 @@ def testFilter(sc, spark):
         {'value': jsonString3},
         {'value': jsonString4}
     ]).toDF()
-    df1 = castentity(df, dict())
+    df1 = kafkaCast(df, dict())
 
     args = {'query': "uuid == 'aaaa'"}
     rdd = streamFilter(df1, args).rdd
@@ -56,11 +57,11 @@ def testFilter(sc, spark):
 
 
 def testCastEntities(sc, spark):
-    from shock.processing import castentity
+    from shock.setup import kafkaCast
     jsonString = '{"uuid": "abcdef", "capability": "temperature",\
                    "timestamp": "today", "value": 15}'
     df = sc.parallelize([{'value': jsonString}]).toDF()
-    df1 = castentity(df, dict())
+    df1 = kafkaCast(df, dict())
     df1.show()
     row = Row(capability='temperature', timestamp='today', uuid='abcdef', value='15')
     row2 = df1.rdd.collect()[0]

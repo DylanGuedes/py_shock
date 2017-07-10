@@ -13,7 +13,7 @@ def getClass(modulePath: str, className: str):
     return getattr(mod, className)
 
 
-def getAction(fileName: str, actionName: str) -> AnyFunction:
+def getAction(fileName: str, actionName: str) -> Callable:
     """Load action from file inside shock folder
 
     Args:
@@ -29,6 +29,14 @@ def getAction(fileName: str, actionName: str) -> AnyFunction:
     return getattr(action, actionName)
 
 
+class InvalidAction(Exception):
+    def __init__(self, action: str) -> None:
+        self.action = action
+
+    def __str__(self):
+        return 'Invalid action %s requested.' % self.action
+
+
 class Shock():
     """This class serves as an abstraction for the communication between Spark
     and Kafka
@@ -39,10 +47,9 @@ class Shock():
     Examples (kafka-consumer):
         >>> newStream;{"stream": "mynicestream"}
         >>> ingestion;{"stream": "mynicestream", "shock_action": "bestaction"}
-        >>> store;{"stream": "mynicestream", "shock_action": "castentity"}
+        >>> setup;{"stream": "mynicestream", "shock_action": "kafkaCast"}
         >>> publish;{"stream": "mynicestream", "shock_action": "parquetSink"}
     """
-
     def __init__(self, handler: Handler, environment="default") -> None:
         """Shock constructor.
 
@@ -59,7 +66,7 @@ class Shock():
         """Consume Kafka's msg
 
         Expected Data:
-            "actionname ;  {"key1": "val1", "key2": "val2", "keyn": "valn"}"
+            "actionname;{"key1": "val1", "key2": "val2", "keyn": "valn"}"
         """
         for pkg in self.handler.consumer:
             self.newActionSignal()
@@ -80,7 +87,7 @@ class Shock():
             actionName = splittedMsg[0].strip()
             args = json.loads(splittedMsg[1])
         except:
-            raise('Invalid action requested!')
+            raise InvalidAction(msg)
         self.handler.handle(actionName, args)
 
 

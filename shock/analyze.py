@@ -1,3 +1,8 @@
+try:
+    import pyspark
+except:
+    import findspark
+    findspark.init()
 from pyspark.sql.types import StructType as SparkStructType
 from pyspark.sql.functions import *
 from pyspark.sql.streaming import DataStreamWriter, DataStreamReader
@@ -9,21 +14,7 @@ import json
 from typing import TypeVar
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
-
-
-def castentity(stream: DataStreamReader, args: dict) -> DataStreamReader:
-    """Return a new dataframe with normalized attrs from `value`
-
-    Args:
-        stream (Stream): processed stream.
-
-    Returns:
-        Stream: casted stream.
-    """
-    json_objects = []
-    for u in ["uuid", "capability", "timestamp", "value"]:
-        json_objects.append(get_json_object(stream.value, '$.'+u).alias(u))
-    return stream.select(json_objects)
+from shock.sinks import getRequiredParam
 
 
 def streamFilter(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
@@ -36,11 +27,8 @@ def streamFilter(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
     Returns:
         SparkDataFrame: filtered stream.
     """
-    query = args.get("query")
-    if (query):
-        return stream.where(query)
-    else:
-        raise('You should pass a query param!')
+    query = getRequiredParam(args, 'query')
+    return stream.where(query)
 
 
 def mean(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
@@ -53,12 +41,12 @@ def mean(stream: SparkDataFrame, args: dict) -> SparkDataFrame:
     Returns:
         SparkDataFrame: filtered stream.
     """
-    df1 = stream.selectExpr('cast(value as double) value', 'capability', 'uuid', 'timestamp')
+    df1 = stream.selectExpr('cast(value as double) value')
     df2 = df1.select(avg("value"))
     return df2
 
 
-def interscitySchema(valueType=str) -> SparkStructType:
+def interscitySchema(valueType="string") -> SparkStructType:
     """Capabilities schema used in InterSCity.
 
     Args:

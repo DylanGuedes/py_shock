@@ -1,5 +1,6 @@
 from pyspark.sql import DataFrame as SparkDataFrame
 from pyspark.sql.types import StructType
+from shock.sinks import getRequiredParam
 
 
 def socketIngestion(args: dict) -> SparkDataFrame:
@@ -11,9 +12,9 @@ def socketIngestion(args: dict) -> SparkDataFrame:
     Returns:
         SparkDataFrame: socket ingestion dataframe ready to be used.
     """
-    spark = args["spark"]
-    host = args["host"]
-    port = args["port"]
+    spark = getRequiredParam(args, 'spark')
+    host = getRequiredParam(args, 'host')
+    port = getRequiredParam(args, 'port')
     return spark.readStream.format("socket") \
             .option("host", host) \
             .option("port", port) \
@@ -21,51 +22,20 @@ def socketIngestion(args: dict) -> SparkDataFrame:
 
 
 def parquetValueIngestion(args: dict) -> SparkDataFrame:
-    spark = args.get("spark")
-    if spark:
-        path = args.get("path")
+    spark = getRequiredParam(args, 'spark')
+    path = getRequiredParam(args, 'path')
 
-        mySchema = StructType() \
-                .add("value", "string") \
-                .add("uuid", "string") \
-                .add("timestamp", "string") \
-                .add("capability", "string")
+    mySchema = StructType() \
+            .add("value", "string") \
+            .add("uuid", "string") \
+            .add("timestamp", "string") \
+            .add("capability", "string")
 
-        if path:
-            stream = spark.readStream \
-                .format("parquet") \
-                .schema(mySchema) \
-                .option("path", path) \
-                .load()
-            stream.writeStream.format('console').outputMode('append').start()
-            return stream
-        else:
-            raise("You should pass a path to be readed!")
-    else:
-        raise("You should pass a spark session instance!")
-
-
-def parquetIngestion(args: dict) -> SparkDataFrame:
-    """Return a Parquet File ingestion stream ready to be used.
-
-    Args:
-        args (dict): dict with options used to mount the stream.
-
-    Returns:
-        SparkDataFrame: Parquet ingestion dataframe ready to be used.
-    """
-    spark = args.get("spark")
-    if spark:
-        path = args.get("path")
-        if path:
-            return spark.readStream.format("parquet") \
-                .option("path", path) \
-                .load() \
-                .selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)")
-        else:
-            raise("You should pass a path to be readed!")
-    else:
-        raise("You should pass a spark session instance!")
+    return spark.readStream \
+        .format('parquet') \
+        .schema(mySchema) \
+        .option('path', path) \
+        .load()
 
 
 def kafkaIngestion(args: dict) -> SparkDataFrame:
@@ -77,9 +47,9 @@ def kafkaIngestion(args: dict) -> SparkDataFrame:
     Returns:
         SparkDataFrame: kafka ingestion dataframe ready to be used.
     """
-    spark = args["spark"] # TODO: raise exception if no param
-    topic = args["topic"] # TODO: raise exception if no param
-    brokers = args["brokers"] # TODO: raise exception if no param
+    spark = getRequiredParam(args, 'spark')
+    topic = getRequiredParam(args, 'topic')
+    brokers = getRequiredParam(args, 'brokers')
     return spark.readStream.format("kafka") \
         .option("kafka.bootstrap.servers", brokers) \
         .option("subscribe", topic) \

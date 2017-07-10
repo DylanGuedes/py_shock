@@ -1,3 +1,10 @@
+try:
+    from pyspark import SparkContext, SparkConf
+except:
+    import findspark
+    findspark.init()
+    from pyspark import SparkContext, SparkConf
+
 from heapq import heappush
 from abc import ABCMeta, abstractmethod
 from kafka import KafkaConsumer, KafkaProducer
@@ -11,7 +18,7 @@ from pyspark.sql import SparkSession
 from pyspark.streaming import StreamingContext
 from shock.core import getAction
 from shock.streams import Stream
-from shock.sinks import flushAndServeWebsockets
+from shock.sinks import getRequiredParam
 import warnings
 
 
@@ -77,29 +84,30 @@ class Handler(metaclass=ABCMeta):
 class InterSCity(Handler):
     def __init__(self, opts: dict, environment="default") -> None:
         warnings.warn('this module will be deprecated!', DeprecationWarning)
-        super().__init__()
+        super().__init__(opts)
 
     def setup(self):
         self.sc = SparkContext(appName="interscity")
+        self.sc.setLogLevel("WARN")
         self.spark = SparkSession(self.sc)
-        self.consumer = KafkaConsumer(bootstrap_servers="kafka:9092")
+        self.consumer = KafkaConsumer(bootstrap_servers="localhost:9092")
         self.consumer.subscribe(['new_pipeline_instruction'])
 
     def handle(self, actionName, args):
         print("Handling action ", actionName)
-        if (actionName == "ingestion"):
+        if (actionName == 'ingestion'):
             self.__handleIngestion(args)
-        elif (actionName == "store"):
-            self.__handleStore(args)
-        elif (actionName == "process"):
-            self.__handleProcess(args)
-        elif (actionName == "publish"):
+        elif (actionName == 'setup'):
+            self.__handleSetup(args)
+        elif (actionName == 'analyze'):
+            self.__handleAnalyze(args)
+        elif (actionName == 'publish'):
             self.__handlePublish(args)
-        elif (actionName == "newStream"):
+        elif (actionName == 'newStream'):
             self.__newStream(args)
-        elif (actionName == "flush"):
+        elif (actionName == 'flush'):
             self.__flush(args)
-        elif (actionName == "start"):
+        elif (actionName == 'start'):
             self.__startStream(args)
 
     def __newStream(self, args):
@@ -113,9 +121,9 @@ class InterSCity(Handler):
         Returns:
             no return.
         """
-        name = args["stream"]
+        name = getRequiredParam(args, 'stream')
         st = Stream(name)
-        self.registerSource(args["stream"], st)
+        self.registerSource(name, st)
 
     def __handleIngestion(self, args):
         """Handle the new ingestion method of a stream.
@@ -126,27 +134,30 @@ class InterSCity(Handler):
         Returns:
             no return.
         """
-        stream = self.sources.get(args["stream"])
+        streamName = getRequiredParam(args, 'stream')
+        stream = self.sources.get(streamName)
+        shockAction = getRequiredParam(args, 'shock_action')
         if (stream):
             args["spark"] = self.spark
-            fn = getAction("ingestion", args["shock_action"])
+            fn = getAction('ingestion', shockAction)
             stream.ingestAction = fn
             stream.ingestArgs = args
         else:
             raise Exception('Stream not found!')
 
-
-    def __handleStore(self, args):
+    def __handleSetup(self, args):
         warnings.warn('deprecated', DeprecationWarning)
-        stream = self.sources.get(args["stream"])
+        streamName = getRequiredParam(args, 'stream')
+        shockAction = getRequiredParam(args, 'shock_action')
+        stream = self.sources.get(streamName)
         if (stream):
-            fn = getAction("processing", args["shock_action"])
-            stream.storeAction = fn
-            stream.storeArgs = args
+            fn = getAction('setup', shockAction)
+            stream.setupAction = fn
+            stream.setupArgs = args
         else:
             raise Exception('Stream not found!')
 
-    def __handleProcess(self, args):
+    def __handleAnalyze(self, args):
         """Handle the new process method of a stream.
 
         Args:
@@ -156,10 +167,11 @@ class InterSCity(Handler):
             no return.
         """
         stream = self.sources.get(args["stream"])
+        shockAction = getRequiredParam(args, 'shock_action')
         if (stream):
-            fn = getAction("processing", args["shock_action"])
-            stream.processAction = fn
-            stream.processArgs = args
+            fn = getAction('analyze', shockAction)
+            stream.analyzeAction = fn
+            stream.analyzeArgs = args
         else:
             raise Exception('Stream not found!')
 
@@ -172,9 +184,11 @@ class InterSCity(Handler):
         Returns:
             no return.
         """
-        stream = self.sources.get(args["stream"])
+        streamName = getRequiredParam(args, 'stream')
+        stream = self.sources.get(streamName)
+        shockAction = getRequiredParam(args, 'shock_action')
         if (stream):
-            fn = getAction("sinks", args["shock_action"])
+            fn = getAction('sinks', shockAction)
             stream.publishAction = fn
             stream.publishArgs = args
         else:
@@ -191,18 +205,13 @@ class InterSCity(Handler):
         """
         warnings.warn('deprecated', DeprecationWarning)
         args["spark"] = self.spark
-        strategy = args.get("strategy")
-        if (not strategy):
-            strategy = "flushAndServeWebsockets"
+        strategy = getRequiredParam(args, 'strategy')
         try:
-            fn = getAction("sinks", strategy)
+            fn = getAction('flushes', strategy)
         except:
             raise('Invalid flush strategy!')
 
-        try:
-            fn(args)
-        except:
-            print("Incorrect flush...")
+        fn(args)
 
     def __startStream(self, args):
         """Starts a stream.
@@ -213,7 +222,8 @@ class InterSCity(Handler):
         Returns:
             no return.
         """
-        stream = self.sources.get(args["stream"])
+        streamName = getRequiredParam(args, 'stream')
+        stream = self.sources.get(streamName)
         if (stream):
             stream.start()
         else:

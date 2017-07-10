@@ -1,7 +1,7 @@
 import pytest
 import findspark
 findspark.init()
-import shock.core
+import shock.analyze
 from tests.helpers import TestHandler
 from unittest.mock import patch
 import pyspark
