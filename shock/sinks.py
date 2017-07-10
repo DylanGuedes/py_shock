@@ -1,7 +1,6 @@
 from typing import TypeVar, Iterable, Any
 from pyspark.sql import SparkSession
 import time
-from shock.analyze import interscitySchema
 import asyncio
 import websockets
 import json
