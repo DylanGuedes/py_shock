@@ -4,30 +4,49 @@
 
 1. Install pip packages
 ```
-$ pip install {kafka-python,asyncio,websockets}
+$ pip install {typing,kafka-python,pytest,asyncio,websockets,findspark}
 ```
 
 2. Run the bin with the correct packages
 ```
- SPARK_HOME/bin/spark-submit \
+./bin/spark-submit \
+--packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.1.0 \
+--packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.1.0 \
+shock.py
+```
+
+Or, in Docker container:
+```
+docker exec dataprocessor_master_1 -it ./bin/spark-submit \
 --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.1.0 \
 --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.1.0 \
 /shock/shock.py
 ```
 
+
 ## Usage
 
 1. Register functions in topic `new_pipeline_instruction` with the following syntax:
 ```sh
-$ fileWithTheFunction;Function
+$ stage;args
 ```
 i.e:
 ```sh
-$ datapipeline;countWords
+$ ingestion;{"shock_action": "kafkaIngestion"}
 ```
 2. Generate information in `interscity` topic (via Kafka, for instance)
 
 ## Using the sp-collector
+
+## Testing
+```sh
+$ pytest .
+```
+
+Or, via Docker container
+```sh
+$ docker exec -it dataprocessor_master_1 pytest /shock/.
+```
 
 1. Run pyspark:
 ```
@@ -59,5 +78,5 @@ $ ./bin/pyspark --conf "spark.mongodb.input.uri=mongodb://127.0.0.1/sp.weather" 
 
 1. Run
 ```
-$ sphinx-build docs/ docs_mount/
+$ sphinx-autobuild docs/ docs_mount/
 ```
