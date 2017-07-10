@@ -28,21 +28,34 @@ shock.streams docs
 
 shock.sinks docs
 ================
-.. autofunction:: shock.sinks.genericSink
+.. autofunction:: shock.sinks.getRequiredParam
 .. autofunction:: shock.sinks.consoleSink
 .. autofunction:: shock.sinks.parquetSink
 .. autofunction:: shock.sinks.jsonSink
-.. autofunction:: shock.sinks.flushAndServeWebsockets
+.. autofunction:: shock.sinks.memorySink
 
 
 shock.ingestion docs
 ====================
 .. autofunction:: shock.ingestion.socketIngestion
 .. autofunction:: shock.ingestion.kafkaIngestion
+.. autofunction:: shock.ingestion.parquetValueIngestion
 
 
-shock.processing docs
+shock.analyze docs
 =====================
-.. autofunction:: shock.processing.castentity
-.. autofunction:: shock.processing.streamFilter
-.. autofunction:: shock.processing.interscitySchema
+.. autofunction:: shock.analyze.mean
+.. autofunction:: shock.analyze.streamFilter
+.. autofunction:: shock.analyze.interscitySchema
+
+
+shock.setup docs
+=====================
+.. autofunction:: shock.setup.kafkaCast
+
+
+shock.flushes docs
+=====================
+.. autofunction:: shock.flushes.queryAndServeWebsockets
+.. autofunction:: shock.flushes.readAndServeWebsockets
+
