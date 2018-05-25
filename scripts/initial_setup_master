@@ -1,0 +1,4 @@
+#!/bin/bash
+cp /shock/scripts/shock_setup /usr/local/bin/.
+/shock/scripts/shock_setup
+bin/spark-class org.apache.spark.deploy.master.Master -h master

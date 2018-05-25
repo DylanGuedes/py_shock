@@ -1,0 +1,6 @@
+#!/bin/bash
+
+PROJECT_NAME="shock"
+parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+source $parent_path/development exec $PROJECT_NAME $@
+
